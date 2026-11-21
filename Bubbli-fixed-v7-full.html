@@ -1,0 +1,3666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bubbli</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&h=800&fit=crop');
+      --panel-bg: rgba(255, 255, 255, 0.8);
+      --panel-sub: rgba(255, 255, 255, 0.58);
+      --accent-1: #ff85d8;
+      --accent-2: #9b5de5;
+      --text-main: #2e1065;
+      --text-muted: #6b21a8;
+      --border-glass: rgba(255, 255, 255, 0.72);
+      --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    body.theme-light {
+      --bg-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&h=800&fit=crop');
+      --panel-bg: rgba(255, 255, 255, 0.84);
+      --panel-sub: rgba(255, 255, 255, 0.62);
+      --accent-1: #ff85d8;
+      --accent-2: #9b5de5;
+      --text-main: #2e1065;
+      --text-muted: #6b21a8;
+    }
+
+    body.theme-blue {
+      --bg-image: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #e0e7ff 100%);
+      --accent-1: #60a5fa;
+      --accent-2: #38bdf8;
+      --text-main: #1e3a8a;
+      --text-muted: #1d4ed8;
+      --panel-bg: rgba(255, 255, 255, 0.82);
+      --panel-sub: rgba(255, 255, 255, 0.62);
+    }
+
+    body.theme-lavender {
+      --bg-image: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 50%, #fae8ff 100%);
+      --accent-1: #c084fc;
+      --accent-2: #818cf8;
+      --text-main: #3b0764;
+      --text-muted: #6b21a8;
+      --panel-bg: rgba(255, 255, 255, 0.82);
+      --panel-sub: rgba(255, 255, 255, 0.62);
+    }
+
+    body.theme-dark {
+      --bg-image: linear-gradient(135deg, #0f0722 0%, #1e1035 50%, #2a1242 100%);
+      --panel-bg: rgba(24, 16, 44, 0.9);
+      --panel-sub: rgba(42, 28, 74, 0.72);
+      --accent-1: #ec4899;
+      --accent-2: #8b5cf6;
+      --text-main: #faf5ff;
+      --text-muted: #d8b4fe;
+      --border-glass: rgba(255, 255, 255, 0.15);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text-main);
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-x: none;
+      transition: background 0.5s var(--ease-smooth), color 0.4s var(--ease-smooth);
+    }
+
+    .font-bubble { font-family: 'Fredoka', sans-serif; }
+
+    .liquid-glass {
+      background: var(--panel-bg);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 16px 48px rgba(107, 33, 168, 0.16), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+      transition: background 0.45s var(--ease-smooth), border 0.45s var(--ease-smooth), transform 0.35s var(--ease-smooth);
+    }
+
+    .liquid-glass-sub {
+      background: var(--panel-sub);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      transition: background 0.35s var(--ease-smooth), border 0.35s var(--ease-smooth), transform 0.25s var(--ease-smooth), opacity 0.25s var(--ease-smooth);
+    }
+
+    .glossy-button {
+      background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+      box-shadow: 0 10px 24px rgba(155, 93, 229, 0.38), inset 0 2px 4px rgba(255, 255, 255, 0.65);
+      transition: transform 0.24s var(--ease-spring), filter 0.25s var(--ease-smooth), box-shadow 0.25s var(--ease-smooth);
+      color: #ffffff;
+    }
+    .glossy-button:hover { filter: brightness(1.05); }
+    .glossy-button:active { transform: scale(0.94); }
+
+    button {
+      transition: transform 0.22s var(--ease-spring), opacity 0.25s var(--ease-smooth), background 0.25s var(--ease-smooth);
+    }
+    button:active { transform: scale(0.96); }
+
+    @keyframes msgFromBottom {
+      0% { opacity: 0; transform: translateY(22px) scale(0.95); }
+      65% { opacity: 1; }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .msg-anim {
+      animation: msgFromBottom 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes reactionPop {
+      0% { opacity: 0; transform: scale(0.45) translateY(6px); }
+      65% { opacity: 1; transform: scale(1.14) translateY(-1px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .reaction-badge-anim {
+      animation: reactionPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .liquid-glass, .liquid-glass-sub, .glossy-button {
+      transition: background 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  border 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0) scale(0.85); opacity: 0.45; }
+      40% { transform: translateY(-4px) scale(1.18); opacity: 1; }
+    }
+    .typing-dot-1 { animation: typingBounce 1.35s var(--ease-smooth) infinite both; }
+    .typing-dot-2 { animation: typingBounce 1.35s var(--ease-smooth) infinite both 0.18s; }
+    .typing-dot-3 { animation: typingBounce 1.35s var(--ease-smooth) infinite both 0.36s; }
+
+    .modal-backdrop {
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(15, 7, 34, 0.52);
+      animation: fadeIn 0.28s var(--ease-smooth) forwards;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(155, 93, 229, 0.3); border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start antialiased pb-20">
+
+  <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[140] flex flex-col items-center space-y-2 pointer-events-none w-11/12 max-w-sm"></div>
+
+  <!-- Confirmation Modal Overlay -->
+  <div id="confirmation-modal" class="fixed inset-0 modal-backdrop z-[130] flex items-center justify-center p-6 hidden">
+    <div class="liquid-glass w-full max-w-xs rounded-3xl p-6 flex flex-col items-center space-y-4 shadow-2xl animate-slide-up text-center">
+      <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shadow-md">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <div class="space-y-1">
+        <h3 id="conf-title" class="font-bubble text-lg font-bold">Are you sure?</h3>
+        <p id="conf-subtitle" class="text-xs opacity-75 font-medium">This action cannot be undone.</p>
+      </div>
+      <div class="flex space-x-2.5 w-full pt-2">
+        <button onclick="closeConfirmationModal()" class="flex-1 py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm">Cancel</button>
+        <button id="conf-yes-btn" class="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-xs shadow-md">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      try {
+        var hasFirebaseUser = false;
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('firebase:authUser:') === 0) {
+            var val = localStorage.getItem(k);
+            if (val && val !== 'null' && val !== 'undefined') {
+              hasFirebaseUser = true;
+              break;
+            }
+          }
+        }
+        var hintRaw = localStorage.getItem('bubbli_session_hint');
+        var hint = null;
+        if (hintRaw) {
+          try { hint = JSON.parse(hintRaw); } catch (e) {}
+        }
+        if (hasFirebaseUser || (hint && hint.uid)) {
+          document.addEventListener('DOMContentLoaded', function() {
+            var authEl = document.getElementById('auth-screen');
+            var mainEl = document.getElementById('main-app');
+            if (authEl) authEl.classList.add('hidden');
+            if (mainEl) mainEl.classList.remove('hidden');
+            if (hint) {
+              var hdrAvatar = document.getElementById('header-avatar');
+              if (hdrAvatar && hint.photoURL) hdrAvatar.src = hint.photoURL;
+            }
+          });
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            var authEl = document.getElementById('auth-screen');
+            var mainEl = document.getElementById('main-app');
+            if (mainEl) mainEl.classList.add('hidden');
+            if (authEl) authEl.classList.remove('hidden');
+          });
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- ================= AUTHENTICATION SCREEN ================= -->
+  <div id="auth-screen" class="w-full max-w-md min-h-screen flex flex-col justify-center items-center p-6 z-10 relative hidden animate-fade-in">
+    <div class="liquid-glass w-full rounded-3xl p-8 flex flex-col items-center space-y-6 animate-slide-up">
+      <div class="flex flex-col items-center space-y-2">
+        <div class="w-20 h-20 rounded-full glossy-button flex items-center justify-center shadow-2xl">
+          <i data-lucide="message-circle-heart" class="w-10 h-10 text-white"></i>
+        </div>
+        <h1 class="font-bubble text-4xl font-bold tracking-wide">Bubbli</h1>
+        <p class="text-xs font-semibold tracking-widest opacity-75 uppercase">Liquid Glass Messenger</p>
+      </div>
+
+      <div id="firebase-status-pill" class="px-3 py-1 rounded-full liquid-glass-sub text-[11px] font-semibold flex items-center space-x-1.5">
+        <span id="firebase-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span id="firebase-status-text">Initializing Firebase...</span>
+      </div>
+
+      <div class="flex liquid-glass-sub p-1 rounded-2xl w-full">
+        <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-sm font-bold rounded-xl glossy-button shadow-sm">Log In</button>
+        <button id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-2 text-sm font-bold rounded-xl opacity-75">Sign Up</button>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="w-full space-y-4">
+        <div id="signup-fields" class="space-y-4 hidden">
+          <div>
+            <label class="block text-[11px] font-bold mb-1 ml-1 opacity-80">DISPLAY NAME</label>
+            <input type="text" id="auth-displayname" placeholder="e.g. Alma Javier" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold mb-1 ml-1 opacity-80">USERNAME</label>
+            <input type="text" id="auth-username" placeholder="e.g. almajavier" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold mb-1 ml-1 opacity-80">EMAIL ADDRESS</label>
+          <input type="email" id="auth-email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold mb-1 ml-1 opacity-80">PASSWORD</label>
+          <input type="password" id="auth-password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+
+        <div id="forgot-password-link-wrap" class="flex justify-end pt-0.5">
+          <button type="button" onclick="openForgotPasswordScreen()" class="text-xs font-bold text-purple-600 dark:text-purple-300 hover:underline">Forgot Password?</button>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl flex items-center justify-center space-x-2">
+          <span id="auth-btn-text">Log In</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+      </form>
+
+      <div class="w-full flex items-center">
+        <div class="flex-grow border-t border-purple-300/40"></div>
+        <span class="px-3 text-[11px] font-bold opacity-60">OR CONTINUE WITH</span>
+        <div class="flex-grow border-t border-purple-300/40"></div>
+      </div>
+
+      <button onclick="handleGoogleLogin()" class="w-full py-3 rounded-2xl liquid-glass-sub hover:opacity-90 font-bold text-sm flex items-center justify-center space-x-2.5 shadow-sm">
+        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        <span>Google Account</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= FORGOT PASSWORD SCREEN ================= -->
+  <div id="forgot-password-screen" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col justify-center items-center p-6 hidden animate-fade-in">
+    <div id="forgot-loading-state" class="liquid-glass w-full rounded-3xl p-8 flex flex-col items-center space-y-6 animate-slide-up shadow-2xl">
+      <div class="w-16 h-16 rounded-full glossy-button flex items-center justify-center shadow-xl animate-spin">
+        <i data-lucide="loader-2" class="w-8 h-8 text-white"></i>
+      </div>
+      <div class="text-center space-y-2 w-full">
+        <h2 class="font-bubble text-xl font-bold">Processing Request</h2>
+        <p id="forgot-loading-subtitle" class="text-xs opacity-80 font-medium">Sending Password Reset to (Email)</p>
+      </div>
+    </div>
+
+    <div id="forgot-success-state" class="liquid-glass w-full rounded-3xl p-8 flex flex-col items-center space-y-6 animate-slide-up shadow-2xl hidden">
+      <div class="w-16 h-16 rounded-full glossy-button flex items-center justify-center shadow-xl">
+        <i data-lucide="check-circle" class="w-8 h-8 text-white"></i>
+      </div>
+      <div class="text-center space-y-2 w-full">
+        <h2 class="font-bubble text-xl font-bold">Reset Link Sent!</h2>
+        <p class="text-xs opacity-75 font-medium">Check your inbox for your secure password reset email.</p>
+      </div>
+      <button onclick="navigateBack()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl">Back to Log In</button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN APP CONTAINER ================= -->
+  <div id="main-app" class="w-full max-w-md min-h-screen flex flex-col z-10 relative animate-fade-in">
+    
+    <header class="sticky top-0 z-40 liquid-glass px-5 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-full glossy-button flex items-center justify-center font-bubble font-bold text-lg">B</div>
+        <div>
+          <span class="font-bubble text-2xl font-bold tracking-wide block leading-none">Bubbli</span>
+          <span id="header-conn-badge" class="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 mt-0.5">
+            <span id="header-conn-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span id="header-conn-label">Live Sync</span>
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="requestDeviceNotificationPermission(false)" title="Push Notifications" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center relative shadow-sm">
+          <i data-lucide="bell-ring" class="w-4 h-4"></i>
+        </button>
+        <div class="relative cursor-pointer" onclick="switchSection('requests')">
+          <div class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+          </div>
+          <span id="header-request-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center hidden">0</span>
+        </div>
+        <div onclick="switchSection('settings')" class="cursor-pointer">
+          <img id="header-avatar" src="" alt="Profile" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm">
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto pb-24">
+      
+      <!-- SECTION 1: CHATS -->
+      <section id="section-chats" class="p-4 space-y-4 animate-fade-in">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="font-bubble text-xl font-bold">Messages</h2>
+          <button onclick="openNewGroupPage()" class="text-xs font-bold px-3.5 py-2 rounded-full glossy-button flex items-center space-x-1.5 shadow-md">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>New Group</span>
+          </button>
+        </div>
+
+        <div class="flex liquid-glass-sub p-1 rounded-2xl w-full">
+          <button id="cat-btn-all" onclick="setChatCategory('all')" class="flex-1 py-2 text-xs font-bold rounded-xl glossy-button shadow-sm">All</button>
+          <button id="cat-btn-unread" onclick="setChatCategory('unread')" class="flex-1 py-2 text-xs font-bold rounded-xl opacity-75">Unread</button>
+          <button id="cat-btn-requests" onclick="setChatCategory('requests')" class="flex-1 py-2 text-xs font-bold rounded-xl opacity-75">Message Requests</button>
+        </div>
+
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 opacity-60"></i>
+          <input type="text" id="chats-universal-search" oninput="filterChatsList(this.value)" placeholder="Search conversations or groups..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-[11px] font-bold tracking-wider px-1 opacity-75">ACTIVE NOW</p>
+          <div id="online-friends-carousel" class="flex space-x-3 overflow-x-auto pb-1">
+            <div class="text-xs opacity-60 px-1 italic">Syncing friends...</div>
+          </div>
+        </div>
+
+        <div id="chats-list" class="space-y-2.5 pt-1">
+          <div class="text-center py-10 text-sm opacity-70">Connecting to Firestore...</div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: FRIENDS -->
+      <section id="section-friends" class="p-4 space-y-4 hidden animate-fade-in">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="font-bubble text-xl font-bold">Friends</h2>
+          <button onclick="openDiscoverUsersPage()" class="glossy-button font-bold text-xs px-3.5 py-2 rounded-full flex items-center space-x-1.5 shadow-md">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+            <span>Add Friend</span>
+          </button>
+        </div>
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 opacity-60"></i>
+          <input type="text" id="friend-search-input" oninput="filterFriendsList(this.value)" placeholder="Filter friends..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div id="friends-list" class="space-y-2.5"></div>
+      </section>
+
+      <!-- SECTION 3: REQUESTS -->
+      <section id="section-requests" class="p-4 space-y-4 hidden animate-fade-in">
+        <h2 class="font-bubble text-xl font-bold px-1">Friend Requests</h2>
+        <div id="requests-list" class="space-y-2.5"></div>
+      </section>
+
+      <!-- SECTION 4: SETTINGS -->
+      <section id="section-settings" class="p-4 space-y-4 hidden animate-fade-in">
+        <h2 class="font-bubble text-xl font-bold px-1">Settings</h2>
+        
+        <div class="liquid-glass rounded-3xl p-3 space-y-2 shadow-sm">
+          <button onclick="openConfigureProfilePage()" class="w-full flex items-center justify-between p-3.5 rounded-2xl liquid-glass-sub cursor-pointer hover:opacity-90">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4"></i></div>
+              <span class="text-sm font-bold">Configure Profile</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 opacity-60"></i>
+          </button>
+
+          <button onclick="openBlockedUsersPage()" class="w-full flex items-center justify-between p-3.5 rounded-2xl liquid-glass-sub cursor-pointer hover:opacity-90">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center text-red-500"><i data-lucide="shield-ban" class="w-4 h-4"></i></div>
+              <span class="text-sm font-bold">Blocked Users Manager</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 opacity-60"></i>
+          </button>
+
+          <button onclick="openBackgroundEditorPage()" class="w-full flex items-center justify-between p-3.5 rounded-2xl liquid-glass-sub cursor-pointer hover:opacity-90">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-full bg-pink-500/20 flex items-center justify-center"><i data-lucide="palette" class="w-4 h-4"></i></div>
+              <span class="text-sm font-bold">Chat Background & Theme</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 opacity-60"></i>
+          </button>
+        </div>
+
+        <div class="liquid-glass rounded-3xl p-5 space-y-2 shadow-sm">
+          <h3 class="text-xs font-bold tracking-wider opacity-75">ACCOUNT & SECURITY</h3>
+          <button onclick="confirmLogout()" class="w-full flex items-center space-x-3 p-2.5 rounded-2xl hover:bg-red-500/10 text-red-500 cursor-pointer">
+            <div class="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center"><i data-lucide="log-out" class="w-4 h-4"></i></div>
+            <span class="text-sm font-bold">Log Out</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto liquid-glass py-2.5 px-6 flex justify-around items-center z-40 rounded-t-3xl shadow-2xl">
+      <button onclick="switchSection('chats')" id="nav-btn-chats" class="flex flex-col items-center space-y-1 font-bold">
+        <i data-lucide="message-square" class="w-5 h-5"></i>
+        <span class="text-[10px]">Chats</span>
+      </button>
+      <button onclick="switchSection('friends')" id="nav-btn-friends" class="flex flex-col items-center space-y-1 opacity-60">
+        <i data-lucide="users" class="w-5 h-5"></i>
+        <span class="text-[10px]">Friends</span>
+      </button>
+      <button onclick="switchSection('requests')" id="nav-btn-requests" class="flex flex-col items-center space-y-1 opacity-60 relative">
+        <i data-lucide="user-plus" class="w-5 h-5"></i>
+        <span class="text-[10px]">Requests</span>
+        <span id="nav-request-dot" class="absolute top-0 right-3 w-2 h-2 bg-pink-500 rounded-full hidden"></span>
+      </button>
+      <button onclick="switchSection('settings')" id="nav-btn-settings" class="flex flex-col items-center space-y-1 opacity-60">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+        <span class="text-[10px]">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ================= DISCOVER USERS PAGE ================= -->
+  <div id="discover-users-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Discover People</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-4 overflow-y-auto animate-slide-up">
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 opacity-60"></i>
+        <input type="text" id="discover-search-input" oninput="filterDiscoverUsers(this.value)" placeholder="Search by name or username..." class="w-full pl-10 pr-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+      </div>
+      <div id="discover-users-list" class="space-y-2.5">
+        <div class="text-center py-10 text-sm opacity-70">Loading users...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BLOCKED USERS MANAGER PAGE ================= -->
+  <div id="blocked-users-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Blocked Users</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-3 overflow-y-auto animate-slide-up" id="blocked-users-list">
+      <div class="text-center py-10 text-sm opacity-70">No blocked users.</div>
+    </div>
+  </div>
+
+  <!-- ================= PUBLIC PROFILE PAGE ================= -->
+  <div id="public-profile-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[70] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">User Profile</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 flex flex-col items-center space-y-6 overflow-y-auto animate-slide-up">
+      <img id="pub-avatar" src="" class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl">
+      <div class="text-center space-y-1 w-full">
+        <h2 id="pub-displayname" class="font-bubble text-2xl font-bold"></h2>
+        <p id="pub-username" class="text-xs opacity-70 font-medium"></p>
+        <p id="pub-bio" class="text-xs opacity-80 pt-2 px-4 italic"></p>
+        <p id="pub-joindate" class="text-[10px] opacity-60 pt-1 font-mono"></p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 w-full">
+        <div onclick="openRelationshipList('friends')" class="liquid-glass-sub p-3 rounded-2xl text-center cursor-pointer hover:opacity-90 shadow-sm">
+          <span id="pub-count-friends" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Friends</span>
+        </div>
+        <div onclick="openRelationshipList('followers')" class="liquid-glass-sub p-3 rounded-2xl text-center cursor-pointer hover:opacity-90 shadow-sm">
+          <span id="pub-count-followers" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Followers</span>
+        </div>
+        <div onclick="openRelationshipList('following')" class="liquid-glass-sub p-3 rounded-2xl text-center cursor-pointer hover:opacity-90 shadow-sm">
+          <span id="pub-count-following" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Following</span>
+        </div>
+      </div>
+
+      <div class="w-full space-y-2.5">
+        <button id="pub-follow-btn" onclick="toggleFollowUser()" class="w-full py-3 rounded-2xl glossy-button font-bold text-xs shadow-md">Follow</button>
+        <button onclick="startPrivateChatFromProfile()" class="w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm">Send Message</button>
+        <button id="pub-friend-btn" onclick="toggleFriendStatus()" class="w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm">Add Friend</button>
+        <button onclick="blockUserFromProfile()" class="w-full py-2.5 rounded-2xl bg-red-500/15 text-red-500 font-bold text-xs shadow-sm">Block User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RELATIONSHIP LIST PAGE ================= -->
+  <div id="relationship-list-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[80] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 id="rel-page-title" class="font-bubble text-base font-bold">List</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-3 overflow-y-auto animate-slide-up" id="relationship-items-container">
+      <div class="text-center py-10 text-sm opacity-70">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ================= CONFIGURE PROFILE PAGE ================= -->
+  <div id="configure-profile-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Configure Profile</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-6 overflow-y-auto animate-slide-up">
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative cursor-pointer group" onclick="document.getElementById('profile-gallery-input').click()">
+          <img id="settings-avatar" src="" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-xl">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <i data-lucide="camera" class="w-6 h-6 text-white"></i>
+          </div>
+        </div>
+        <span class="text-[11px] opacity-70">Tap photo to change avatar</span>
+        <input type="file" id="profile-gallery-input" accept="image/*" class="hidden" onchange="handleProfileGalleryUpload(event)">
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 w-full">
+        <div class="liquid-glass-sub p-3 rounded-2xl text-center shadow-sm">
+          <span id="cfg-count-friends" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Friends</span>
+        </div>
+        <div class="liquid-glass-sub p-3 rounded-2xl text-center shadow-sm">
+          <span id="cfg-count-followers" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Followers</span>
+        </div>
+        <div class="liquid-glass-sub p-3 rounded-2xl text-center shadow-sm">
+          <span id="cfg-count-following" class="block font-bubble font-bold text-lg">0</span>
+          <span class="text-[11px] font-semibold opacity-75">Following</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold ml-1 opacity-80 mb-1">DISPLAY NAME</label>
+          <input type="text" id="settings-displayname-input" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold ml-1 opacity-80 mb-1">USERNAME</label>
+          <input type="text" id="settings-username-input" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold ml-1 opacity-80 mb-1">BIO</label>
+          <textarea id="settings-bio-input" rows="3" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+        </div>
+      </div>
+      <button onclick="saveProfileConfiguration()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl">Save Profile Changes</button>
+      <button onclick="triggerProfileResetPassword()" class="w-full py-3.5 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm text-purple-600 dark:text-purple-300">Reset Password (Send Email)</button>
+    </div>
+  </div>
+
+  <!-- ================= CHAT BACKGROUND & THEME EDITOR PAGE ================= -->
+  <div id="background-editor-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Chat Background & Theme</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-6 overflow-y-auto animate-slide-up">
+      <div class="liquid-glass rounded-3xl p-5 space-y-4 shadow-sm">
+        <h3 class="text-xs font-bold tracking-wider opacity-75">APP THEME MODE</h3>
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button onclick="setAppTheme('light')" class="py-3 px-3 rounded-2xl bg-white text-purple-950 text-xs font-bold border border-purple-200 shadow-sm">Light Mode</button>
+          <button onclick="setAppTheme('dark')" class="py-3 px-3 rounded-2xl bg-slate-900 text-purple-200 text-xs font-bold border border-purple-800 shadow-sm">Dark Mode</button>
+          <button onclick="setAppTheme('blue')" class="py-3 px-3 rounded-2xl bg-blue-200 text-blue-950 text-xs font-bold border border-blue-300 shadow-sm">Pastel Blue</button>
+          <button onclick="setAppTheme('lavender')" class="py-3 px-3 rounded-2xl bg-purple-200 text-purple-950 text-xs font-bold border border-purple-300 shadow-sm">Lavender</button>
+        </div>
+      </div>
+
+      <div class="liquid-glass rounded-3xl p-5 space-y-4 shadow-sm">
+        <h3 class="text-xs font-bold tracking-wider opacity-75">CUSTOM BACKGROUND PHOTO</h3>
+        <div class="flex flex-col items-center space-y-3">
+          <button onclick="document.getElementById('custom-bg-file-input').click()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-xs shadow-md flex items-center justify-center space-x-2">
+            <i data-lucide="image" class="w-4 h-4"></i>
+            <span>Upload Custom Background Photo</span>
+          </button>
+          <button onclick="removeCustomBackground()" class="w-full py-2.5 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm text-red-500">Reset to Default Theme Gradient</button>
+          <input type="file" id="custom-bg-file-input" accept="image/*" class="hidden" onchange="handleCustomBackgroundUpload(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NEW GROUP PAGE ================= -->
+  <div id="new-group-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[60] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">New Group Chat</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-5 overflow-y-auto animate-slide-up">
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative cursor-pointer group" onclick="document.getElementById('new-group-gallery-input').click()">
+          <img id="new-group-preview" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&h=200&fit=crop" class="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+          </div>
+        </div>
+        <span class="text-[11px] opacity-70">Tap photo to choose</span>
+        <input type="file" id="new-group-gallery-input" accept="image/*" class="hidden" onchange="handleNewGroupPhotoUpload(event)">
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-bold ml-1 opacity-80">GROUP NAME</label>
+        <input type="text" id="new-group-name-input" placeholder="e.g. Weekend Squad" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-xs font-bold ml-1 opacity-80">SEARCH & SELECT PEOPLE (FRIENDS OR NON-FRIENDS)</label>
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4 h-4 opacity-60"></i>
+          <input type="text" id="new-group-search-input" oninput="renderNewGroupCandidates(this.value)" placeholder="Search anyone by name or username..." class="w-full pl-10 pr-4 py-2 rounded-2xl liquid-glass-sub text-xs focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div id="group-friends-select-list" class="space-y-2 max-h-52 overflow-y-auto p-1"></div>
+      </div>
+      <button onclick="finalizeCreateGroup()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl">Create Group</button>
+    </div>
+  </div>
+
+  <!-- ================= ADD MEMBERS PAGE ================= -->
+  <div id="add-members-page" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[75] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Add People to Group</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-5 overflow-y-auto animate-slide-up">
+      <div class="space-y-2">
+        <label class="block text-xs font-bold ml-1 opacity-80">SEARCH ANYONE TO ADD (NON-FRIENDS GO TO REQUESTS)</label>
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4 h-4 opacity-60"></i>
+          <input type="text" id="add-members-search-input" oninput="renderAddMembersCandidates(this.value)" placeholder="Search name or username..." class="w-full pl-10 pr-4 py-2 rounded-2xl liquid-glass-sub text-xs focus:outline-none focus:ring-2 focus:ring-purple-400">
+        </div>
+        <div id="add-members-select-list" class="space-y-2 max-h-72 overflow-y-auto p-1"></div>
+      </div>
+      <button onclick="finalizeAddMembers()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl">Add Selected Members</button>
+    </div>
+  </div>
+
+  <!-- ================= EDIT GROUP PROFILE OVERLAY ================= -->
+  <div id="group-profile-edit-overlay" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[75] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 class="font-bubble text-base font-bold">Edit Group Profile</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 space-y-6 overflow-y-auto animate-slide-up">
+      <div class="flex flex-col items-center space-y-2">
+        <div class="relative cursor-pointer group" onclick="document.getElementById('edit-group-gallery-input').click()">
+          <img id="edit-group-avatar-preview" src="" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-xl">
+          <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <i data-lucide="camera" class="w-6 h-6 text-white"></i>
+          </div>
+        </div>
+        <span class="text-[11px] opacity-70">Tap photo to pick</span>
+        <input type="file" id="edit-group-gallery-input" accept="image/*" class="hidden" onchange="handleEditGroupPhotoUpload(event)">
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-bold ml-1 opacity-80">GROUP NAME</label>
+        <input type="text" id="edit-group-name-input" class="w-full px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+      </div>
+      <button onclick="saveGroupProfileChanges()" class="w-full py-3.5 rounded-2xl glossy-button font-bold text-base shadow-xl">Save Group Changes</button>
+    </div>
+  </div>
+
+  <!-- ================= ACTIVE CHAT ROOM VIEW ================= -->
+  <div id="chat-room-view" class="fixed inset-0 max-w-md mx-auto liquid-glass z-50 flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3 liquid-glass flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-3 cursor-pointer truncate" onclick="openActiveChatProfile()">
+        <button onclick="event.stopPropagation(); navigateBack();" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shrink-0 shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+        <div class="relative shrink-0">
+          <img id="chatroom-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover border border-white shadow-sm">
+          <span id="chatroom-status-dot" class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white hidden"></span>
+        </div>
+        <div class="truncate">
+          <h3 id="chatroom-name" class="text-sm font-bold leading-tight truncate">Chat Name</h3>
+          <p id="chatroom-subtitle" class="text-[11px] opacity-75 font-medium truncate">offline</p>
+        </div>
+      </div>
+      <div id="chatroom-header-actions" class="flex items-center space-x-2 shrink-0"></div>
+    </div>
+
+    <!-- Group Invite Message Request Banner -->
+    <div id="group-invite-request-banner" class="liquid-glass-sub p-4 border-b border-purple-300/30 flex flex-col space-y-3 hidden">
+      <p class="text-xs text-center font-bold opacity-95">Someone added you in this group</p>
+      <button onclick="acceptGroupInviteRequest()" class="w-full py-2.5 rounded-xl glossy-button text-xs font-bold shadow-sm">Accept</button>
+    </div>
+
+    <!-- Private Message Request Banner -->
+    <div id="message-request-banner" class="liquid-glass-sub p-4 border-b border-purple-300/30 flex flex-col space-y-3 hidden">
+      <p id="message-request-text" class="text-xs text-center font-medium opacity-90">It seems like its your first time chatting with User</p>
+      <div class="flex space-x-2">
+        <button onclick="acceptMessageRequestAsFriend()" class="flex-1 py-2 rounded-xl glossy-button text-xs font-bold shadow-sm">Add Friend</button>
+        <button onclick="dismissMessageRequestBanner()" class="flex-1 py-2 rounded-xl liquid-glass-sub text-xs font-bold shadow-sm">Continue Conversation</button>
+      </div>
+    </div>
+
+    <!-- Reply Banner -->
+    <div id="reply-banner" class="px-4 py-2 liquid-glass-sub flex items-center justify-between hidden">
+      <div class="text-xs truncate"><span class="font-bold">Replying to:</span> <span id="reply-preview-text"></span></div>
+      <button onclick="cancelReply()" class="opacity-70 hover:opacity-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <!-- Messages Feed -->
+    <div id="chatroom-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+    <!-- Animated Typing Indicator Bubble -->
+    <div id="typing-indicator-bar" class="px-4 py-2 flex items-center space-x-2.5 hidden">
+      <img id="typing-avatar-preview" src="" class="w-7 h-7 rounded-full object-cover shadow-sm">
+      <div class="liquid-glass px-4 py-2 rounded-2xl rounded-bl-sm flex items-center space-x-1.5 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-purple-600 typing-dot-1"></span>
+        <span class="w-2 h-2 rounded-full bg-purple-600 typing-dot-2"></span>
+        <span class="w-2 h-2 rounded-full bg-purple-600 typing-dot-3"></span>
+      </div>
+    </div>
+
+    <!-- Bottom Composer -->
+    <div id="chatroom-bottom-container" class="p-3 liquid-glass">
+      <div id="chat-composer-active" class="flex items-center space-x-2">
+        <input type="file" id="chat-image-file-input" accept="image/*" multiple class="hidden" onchange="handleChatImageSelect(event)">
+        <input type="file" id="chat-video-file-input" accept="video/*" class="hidden" onchange="handleChatVideoSelect(event)">
+        <button onclick="openMediaMenu()" class="w-10 h-10 rounded-2xl liquid-glass-sub flex items-center justify-center shrink-0 shadow-sm" title="Add Media">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+        </button>
+        <input type="text" id="chat-message-input" oninput="handleTypingInput()" onkeypress="if(event.key==='Enter') sendChatMessage()" placeholder="Message..." class="flex-1 px-4 py-3 rounded-2xl liquid-glass-sub text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+        <button onclick="sendChatMessage()" class="w-11 h-11 rounded-2xl glossy-button flex items-center justify-center shrink-0 shadow-md">
+          <i data-lucide="send" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Live Voice Recording Bar -->
+      <div id="voice-recording-bar" class="hidden flex items-center justify-between py-1 px-2">
+        <div class="flex items-center space-x-3">
+          <button onclick="cancelVoiceRecording()" class="w-9 h-9 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+          <span id="recording-timer" class="text-xs font-bold text-red-500 font-mono animate-pulse">0:00</span>
+        </div>
+        <div id="wave-visualizer" class="flex items-end space-x-1 h-6 px-3 font-mono font-bold text-purple-600 text-sm tracking-widest select-none">
+          <span>|</span><span>|</span><span>|</span><span>|</span><span>|</span><span>|</span><span>|</span>
+        </div>
+        <button onclick="stopAndSendVoiceRecording()" class="px-4 py-2.5 rounded-2xl glossy-button font-bold text-xs flex items-center space-x-1 shadow-md">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Send</span>
+        </button>
+      </div>
+
+      <!-- Unavailable / Blocked Notice -->
+      <div id="chat-unavailable-box" class="hidden flex flex-col items-center space-y-2.5 py-2 px-3 rounded-2xl liquid-glass-sub text-center">
+        <p class="text-xs font-bold text-red-500">This person is unavailable</p>
+        <button id="chat-unblock-action-btn" onclick="unblockActiveChatUser()" class="hidden px-4 py-2 rounded-xl glossy-button text-xs font-bold shadow-sm">Unblock</button>
+      </div>
+
+      <!-- Deleted Group Notice -->
+      <div id="chat-deleted-group-box" class="hidden flex flex-col items-center space-y-2.5 py-2.5 px-3 rounded-2xl liquid-glass-sub text-center">
+        <p class="text-xs font-bold text-red-500">This group chat has been deleted</p>
+        <button onclick="confirmLeaveGroup()" class="px-5 py-2 rounded-xl bg-red-500 text-white text-xs font-bold shadow-md">Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PHOTO VIEWER PAGE ================= -->
+  <div id="photo-viewer-page" class="fixed inset-0 bg-black/95 z-[95] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 flex items-center justify-between bg-black/50 backdrop-blur-md">
+      <button onclick="navigateBack()" class="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+      </button>
+      <button onclick="downloadViewedPhoto()" class="px-4 py-2 rounded-full glossy-button text-xs font-bold flex items-center space-x-1.5 shadow-lg">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>Download</span>
+      </button>
+    </div>
+    <div class="flex-1 flex items-center justify-center p-4 overflow-hidden">
+      <img id="photo-viewer-img" src="" alt="Full Photo" class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-fade-in">
+    </div>
+  </div>
+
+  <!-- Media Attachment Menu -->
+  <div id="media-menu-backdrop" class="fixed inset-0 modal-backdrop z-[70] flex items-center justify-center hidden" onclick="navigateBack()">
+    <div class="liquid-glass w-64 rounded-3xl p-3 space-y-2 shadow-2xl animate-slide-up" onclick="event.stopPropagation()">
+      <button onclick="selectMediaOption('photo')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Gallery Photos (Multi)</span><i data-lucide="images" class="w-4 h-4"></i></button>
+      <button onclick="selectMediaOption('video')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Gallery Video</span><i data-lucide="video" class="w-4 h-4"></i></button>
+      <button onclick="selectMediaOption('voice')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Voice Clip</span><i data-lucide="mic" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <!-- Conversation Bar Long-Press Options Modal -->
+  <div id="chatbar-options-backdrop" class="fixed inset-0 modal-backdrop z-[70] flex items-center justify-center hidden" onclick="navigateBack()">
+    <div class="liquid-glass w-72 rounded-3xl p-4 space-y-2 shadow-2xl animate-slide-up" onclick="event.stopPropagation()">
+      <h3 id="chatbar-opt-title" class="text-xs font-bold text-center mb-1 opacity-75 truncate">Manage Conversation</h3>
+      <button onclick="executeChatBarAction('mute')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Mute Notifications</span><i data-lucide="bell-off" class="w-4 h-4"></i></button>
+      <button onclick="executeChatBarAction('delete')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Delete Conversation</span><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+      <button id="chatbar-block-btn" onclick="executeChatBarAction('block')" class="w-full py-3 px-4 rounded-2xl bg-red-500/15 text-red-500 text-xs font-bold flex items-center justify-between"><span>Block Person</span><i data-lucide="shield-ban" class="w-4 h-4"></i></button>
+      <button id="chatbar-leave-btn" onclick="executeChatBarAction('leaveGroup')" class="w-full py-3 px-4 rounded-2xl bg-red-500/15 text-red-500 text-xs font-bold flex items-center justify-between hidden"><span>Leave Group Chat</span><i data-lucide="log-out" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <!-- Message Reaction Modal -->
+  <div id="longpress-backdrop" class="fixed inset-0 modal-backdrop z-[70] flex items-center justify-center hidden" onclick="navigateBack()">
+    <div class="flex flex-col items-center space-y-3 p-4 animate-slide-up" onclick="event.stopPropagation()">
+      <div id="longpress-preview-bubble" class="p-3.5 rounded-2xl glossy-button text-sm max-w-xs shadow-2xl break-words"></div>
+      <div class="flex space-x-3 liquid-glass px-5 py-3 rounded-full shadow-2xl">
+        <button onclick="reactToMessage('😭')" class="text-2xl hover:scale-125 transition-transform">😭</button>
+        <button onclick="reactToMessage('😂')" class="text-2xl hover:scale-125 transition-transform">😂</button>
+        <button onclick="reactToMessage('🙄')" class="text-2xl hover:scale-125 transition-transform">🙄</button>
+        <button onclick="reactToMessage('😡')" class="text-2xl hover:scale-125 transition-transform">😡</button>
+        <button onclick="reactToMessage('💓')" class="text-2xl hover:scale-125 transition-transform">💓</button>
+      </div>
+      <div class="liquid-glass w-64 rounded-2xl p-2 space-y-1 shadow-2xl">
+        <button onclick="copyMessageTextFromModal()" class="w-full py-2.5 px-3 rounded-xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Copy text</span><i data-lucide="copy" class="w-4 h-4"></i></button>
+        <button onclick="triggerReplyFromModal()" class="w-full py-2.5 px-3 rounded-xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Reply</span><i data-lucide="reply" class="w-4 h-4"></i></button>
+        <button onclick="unsendForMe()" class="w-full py-2.5 px-3 rounded-xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Remove for You</span><i data-lucide="eye-off" class="w-4 h-4"></i></button>
+        <button id="unsend-everyone-btn" onclick="unsendForEveryone()" class="w-full py-2.5 px-3 rounded-xl bg-red-500/15 text-red-500 text-xs font-bold flex items-center justify-between hidden"><span>Unsend for Everyone</span><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reaction Details Modal -->
+  <div id="reaction-details-backdrop" class="fixed inset-0 modal-backdrop z-[70] flex items-center justify-center hidden" onclick="navigateBack()">
+    <div class="liquid-glass w-11/12 max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl animate-slide-up" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-2 border-b border-purple-300/30">
+        <h3 class="font-bubble text-sm font-bold">Reactions</h3>
+        <button onclick="navigateBack()"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div id="reaction-details-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- Group/Friend Profile Overlay -->
+  <div id="friend-profile-overlay" class="fixed inset-0 max-w-md mx-auto liquid-glass z-[65] flex flex-col hidden animate-fade-in">
+    <div class="px-4 py-3.5 liquid-glass flex items-center justify-between">
+      <button onclick="navigateBack()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h3 id="profile-page-title" class="font-bubble text-base font-bold">Profile</h3>
+      <div class="w-9"></div>
+    </div>
+    <div class="flex-1 p-6 flex flex-col items-center space-y-5 overflow-y-auto animate-slide-up">
+      <img id="fp-avatar" src="" class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl">
+      <div class="text-center space-y-1 w-full">
+        <h2 id="fp-displayname" class="font-bubble text-2xl font-bold"></h2>
+        <p id="fp-username" class="text-xs opacity-70 font-medium"></p>
+      </div>
+
+      <div id="fp-group-manage-btn-container" class="w-full space-y-2.5 hidden">
+        <button id="fp-edit-group-btn" onclick="openGroupProfileEdit()" class="w-full py-3 rounded-2xl glossy-button font-bold text-xs shadow-md hidden">Edit Group Name & Photo</button>
+        <button id="fp-add-members-btn" onclick="openAddMembersPage()" class="w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm flex items-center justify-center space-x-1.5 hidden"><i data-lucide="user-plus" class="w-4 h-4"></i><span>Add Members</span></button>
+        <div id="fp-anyone-can-add-wrap" class="w-full p-3.5 rounded-2xl liquid-glass-sub flex items-center justify-between shadow-sm hidden">
+          <span class="text-xs font-bold">Anyone can add someone on this group</span>
+          <button id="fp-anyone-can-add-toggle" onclick="toggleAnyoneCanAddSetting()" class="px-3 py-1 rounded-full text-[11px] font-bold glossy-button">OFF</button>
+        </div>
+      </div>
+
+      <div id="fp-group-members-container" class="w-full space-y-3 hidden">
+        <h4 class="text-xs font-bold tracking-wider px-1 opacity-75">CREATOR / ADMINS</h4>
+        <div id="fp-group-admins-list" class="space-y-2"></div>
+        <h4 class="text-xs font-bold tracking-wider px-1 opacity-75 pt-2">MEMBERS</h4>
+        <div id="fp-group-members-list" class="space-y-2"></div>
+      </div>
+
+      <div id="fp-leave-group-container" class="w-full pt-2 space-y-2.5 hidden">
+        <button onclick="confirmLeaveGroup()" class="w-full py-3 rounded-2xl bg-red-500/20 text-red-500 font-bold text-xs border border-red-500/30 shadow-sm">Leave Group</button>
+        <button id="fp-delete-group-btn" onclick="confirmDeleteGroupChat()" class="w-full py-3 rounded-2xl bg-red-600 text-white font-bold text-xs shadow-md hidden">Delete Group Chat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Action Modal -->
+  <div id="member-action-backdrop" class="fixed inset-0 modal-backdrop z-[85] flex items-center justify-center hidden" onclick="navigateBack()">
+    <div class="liquid-glass w-72 rounded-3xl p-4 space-y-2 shadow-2xl animate-slide-up" onclick="event.stopPropagation()">
+      <h3 id="member-action-title" class="text-xs font-bold text-center mb-1 opacity-75">Manage Member</h3>
+      <button id="member-action-admin-btn" onclick="executeMemberAction('makeAdmin')" class="w-full py-3 px-4 rounded-2xl liquid-glass-sub text-xs font-bold flex items-center justify-between"><span>Make Admin</span><i data-lucide="shield-check" class="w-4 h-4"></i></button>
+      <button onclick="confirmKickMember()" class="w-full py-3 px-4 rounded-2xl bg-red-500/15 text-red-500 text-xs font-bold flex items-center justify-between"><span>Kick from Group</span><i data-lucide="user-x" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // EXACT FIREBASE PROJECT CONFIGURATION (bubbli-af4ff)
+    // =========================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdlYxrOmJYOYAHqx6JkL8NO7xdJXIf4QQ",
+      authDomain: "bubbli-af4ff.firebaseapp.com",
+      databaseURL: "https://bubbli-af4ff-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bubbli-af4ff",
+      storageBucket: "bubbli-af4ff.firebasestorage.app",
+      messagingSenderId: "584397650920",
+      appId: "1:584397650920:web:5cd29566116dbad854c25d",
+      measurementId: "G-1CJKD2CFQM"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+      if (err && err.code === 'failed-precondition') {
+        db.enablePersistence().catch(() => {});
+      }
+    });
+
+    let currentUser = null;
+    let userData = null;
+    let activeChatId = null;
+    let activeChatData = null;
+    let activeOtherUser = null;
+    let unlisteners = [];
+    let cachedFriends = [];
+    let cachedChatsDocs = [];
+    let allUsersCache = [];
+    let userCache = {};
+    let currentChatCategory = 'all';
+    let replyingToMessage = null;
+    let selectedMessageForModal = null;
+    let selectedMessageRawText = '';
+    let selectedMessageIsMine = false;
+    let selectedMemberIdForAction = null;
+    let selectedMemberNameForAction = '';
+    let selectedChatBarId = null;
+    let selectedChatBarName = '';
+    let selectedChatBarOtherUid = null;
+    let selectedChatBarIsGroup = false;
+    let pendingRequestsCache = [];
+    let typingTimeout = null;
+    let viewStack = [];
+    let currentViewedPhotoUrl = '';
+
+    const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop";
+    const DEFAULT_GROUP_AVATAR = "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&h=200&fit=crop";
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadSavedTheme();
+      verifyFirebaseConnection();
+      initSwipeBackNavigation();
+      initAuthListener();
+    });
+
+    function initSwipeBackNavigation() {
+      window.history.replaceState({ depth: 0 }, "");
+      window.addEventListener('popstate', () => {
+        if (viewStack.length > 0) {
+          const topView = viewStack.pop();
+          closeViewByName(topView);
+        }
+      });
+
+      let swipeStartX = 0;
+      let swipeStartY = 0;
+      let isSwipingBack = false;
+
+      document.addEventListener('touchstart', (e) => {
+        if (viewStack.length === 0 || !e.touches || e.touches.length === 0) return;
+        const t = e.touches[0];
+        if (t.clientX <= 42) {
+          swipeStartX = t.clientX;
+          swipeStartY = t.clientY;
+          isSwipingBack = true;
+        } else {
+          isSwipingBack = false;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', (e) => {
+        if (!isSwipingBack || viewStack.length === 0) return;
+        isSwipingBack = false;
+        const t = e.changedTouches && e.changedTouches[0];
+        if (!t) return;
+        const dx = t.clientX - swipeStartX;
+        const dy = Math.abs(t.clientY - swipeStartY);
+        if (dx > 75 && dy < 70) {
+          navigateBack();
+        }
+      }, { passive: true });
+    }
+
+    function pushView(viewName) {
+      if (viewStack[viewStack.length - 1] === viewName) return;
+      viewStack.push(viewName);
+      window.history.pushState({ depth: viewStack.length }, "");
+    }
+
+    function navigateBack() {
+      if (viewStack.length > 0) {
+        const topView = viewStack.pop();
+        closeViewByName(topView);
+      }
+    }
+
+    function navigateHomeChats() {
+      while (viewStack.length > 0) {
+        const v = viewStack.pop();
+        closeViewByName(v);
+      }
+      switchSection('chats');
+    }
+
+    function closeViewByName(viewName) {
+      switch (viewName) {
+        case 'forgotPassword':
+          document.getElementById('forgot-password-screen').classList.add('hidden');
+          document.getElementById('auth-screen').classList.remove('hidden');
+          break;
+        case 'discoverUsers':
+          document.getElementById('discover-users-page').classList.add('hidden');
+          break;
+        case 'blockedUsers':
+          document.getElementById('blocked-users-page').classList.add('hidden');
+          break;
+        case 'publicProfile':
+          document.getElementById('public-profile-page').classList.add('hidden');
+          break;
+        case 'relationshipList':
+          document.getElementById('relationship-list-page').classList.add('hidden');
+          break;
+        case 'mediaMenu':
+          document.getElementById('media-menu-backdrop').classList.add('hidden');
+          break;
+        case 'chatBarOptions':
+          document.getElementById('chatbar-options-backdrop').classList.add('hidden');
+          break;
+        case 'longpress':
+          document.getElementById('longpress-backdrop').classList.add('hidden');
+          break;
+        case 'reactionDetails':
+          document.getElementById('reaction-details-backdrop').classList.add('hidden');
+          break;
+        case 'memberAction':
+          document.getElementById('member-action-backdrop').classList.add('hidden');
+          break;
+        case 'newGroup':
+          document.getElementById('new-group-page').classList.add('hidden');
+          break;
+        case 'addMembers':
+          document.getElementById('add-members-page').classList.add('hidden');
+          break;
+        case 'editGroup':
+          document.getElementById('group-profile-edit-overlay').classList.add('hidden');
+          break;
+        case 'friendProfile':
+          document.getElementById('friend-profile-overlay').classList.add('hidden');
+          break;
+        case 'configureProfile':
+          document.getElementById('configure-profile-page').classList.add('hidden');
+          break;
+        case 'backgroundEditor':
+          document.getElementById('background-editor-page').classList.add('hidden');
+          break;
+        case 'photoViewer':
+          document.getElementById('photo-viewer-page').classList.add('hidden');
+          break;
+        case 'chatRoom':
+          performCloseChatRoom();
+          break;
+      }
+    }
+
+    function updateOfflineModeStatusUI() {
+      const isOnline = navigator.onLine !== false;
+      const dot = document.getElementById('header-conn-dot');
+      const label = document.getElementById('header-conn-label');
+      if (dot && label) {
+        if (isOnline) {
+          dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+          label.className = "text-[10px] font-semibold text-emerald-600 flex items-center gap-1 mt-0.5";
+          label.innerText = "Live Sync";
+        } else {
+          dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500";
+          label.className = "text-[10px] font-semibold text-amber-600 flex items-center gap-1 mt-0.5";
+          label.innerText = "Offline Mode";
+        }
+      }
+    }
+
+    function saveOfflineChatsSnapshot(docs) {
+      try {
+        if (!currentUser || !Array.isArray(docs)) return;
+        const snapshotData = docs.slice(0, 30).map(d => {
+          const data = d.data() || {};
+          return {
+            id: d.id,
+            type: data.type || 'private',
+            name: data.name || 'Chat',
+            photoURL: data.photoURL || '',
+            members: data.members || [],
+            lastMessage: data.lastMessage || '',
+            lastSenderId: data.lastSenderId || '',
+            deletedGroup: Boolean(data.deletedGroup),
+            deletedFor: data.deletedFor || [],
+            kicked: data.kicked || [],
+            createdBy: data.createdBy || '',
+            acceptedBy: data.acceptedBy || [],
+            updatedAtMs: data.updatedAt && data.updatedAt.toMillis ? data.updatedAt.toMillis() : 0
+          };
+        });
+        localStorage.setItem('bubbli_offline_chats_' + currentUser.uid, JSON.stringify(snapshotData));
+      } catch (e) {}
+    }
+
+    function loadOfflineChatsSnapshot() {
+      try {
+        if (!currentUser) return [];
+        const raw = localStorage.getItem('bubbli_offline_chats_' + currentUser.uid);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(item => ({
+          id: item.id,
+          data: () => ({
+            ...item,
+            updatedAt: item.updatedAtMs ? { toMillis: () => item.updatedAtMs, toDate: () => new Date(item.updatedAtMs) } : null
+          })
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOfflineMessagesSnapshot(chatId, docs) {
+      try {
+        if (!chatId || !Array.isArray(docs)) return;
+        const msgs = docs.slice(-60).map(d => {
+          const m = d.data() || {};
+          return {
+            id: d.id,
+            senderId: m.senderId || '',
+            senderName: m.senderName || '',
+            text: m.text || '',
+            replyTo: m.replyTo || null,
+            imageURL: m.imageURL || null,
+            videoURL: m.videoURL || null,
+            audioURL: m.audioURL || null,
+            reactions: m.reactions || {},
+            deletedForEveryone: Boolean(m.deletedForEveryone),
+            isSystemMessage: Boolean(m.isSystemMessage)
+          };
+        });
+        localStorage.setItem('bubbli_offline_msgs_' + chatId, JSON.stringify(msgs));
+      } catch (e) {}
+    }
+
+    function loadOfflineMessagesSnapshot(chatId) {
+      try {
+        if (!chatId) return [];
+        const raw = localStorage.getItem('bubbli_offline_msgs_' + chatId);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(item => ({
+          id: item.id,
+          data: () => item
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    window.addEventListener('online', () => {
+      updateOfflineModeStatusUI();
+      showToast("Back online — syncing messages...");
+    });
+    window.addEventListener('offline', () => {
+      updateOfflineModeStatusUI();
+      showToast("You are offline — viewing cached data", "error");
+    });
+
+    async function verifyFirebaseConnection() {
+      const dot = document.getElementById('firebase-status-dot');
+      const text = document.getElementById('firebase-status-text');
+      updateOfflineModeStatusUI();
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        if (navigator.onLine === false) {
+          dot.className = "w-2 h-2 rounded-full bg-amber-500";
+          text.innerText = "Offline Mode Active";
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+          text.innerText = "Connected to bubbli-af4ff";
+        }
+      } catch (err) {
+        dot.className = "w-2 h-2 rounded-full bg-red-500";
+        text.innerText = "Connection Error";
+      }
+    }
+
+    function setAppTheme(themeName) {
+      document.body.className = document.body.className.replace(/theme-\w+/g, '');
+      if (themeName !== 'light') document.body.classList.add(`theme-${themeName}`);
+      localStorage.setItem('bubbli_theme', themeName);
+      localStorage.removeItem('bubbli_custom_bg');
+      document.body.style.backgroundImage = '';
+    }
+
+    function loadSavedTheme() {
+      const customBg = localStorage.getItem('bubbli_custom_bg');
+      if (customBg) {
+        document.body.style.backgroundImage = `url(${customBg})`;
+      } else {
+        setAppTheme(localStorage.getItem('bubbli_theme') || 'light');
+      }
+    }
+
+    function handleCustomBackgroundUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      compressImageFile(file, 1200, (base64) => {
+        localStorage.setItem('bubbli_custom_bg', base64);
+        document.body.style.backgroundImage = `url(${base64})`;
+        showToast("Custom background applied!");
+      });
+      e.target.value = '';
+    }
+
+    function removeCustomBackground() {
+      localStorage.removeItem('bubbli_custom_bg');
+      setAppTheme('light');
+      showToast("Reset to theme default");
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 ${type === 'error' ? 'bg-red-500' : 'bg-purple-600'}`;
+      toast.innerHTML = `<i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-4 h-4 shrink-0"></i><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 320);
+      }, 2800);
+    }
+
+    function showConfirmationModal(title, subtitle, onConfirm) {
+      document.getElementById('conf-title').innerText = title;
+      document.getElementById('conf-subtitle').innerText = subtitle;
+      const yesBtn = document.getElementById('conf-yes-btn');
+      yesBtn.onclick = () => {
+        closeConfirmationModal();
+        onConfirm();
+      };
+      document.getElementById('confirmation-modal').classList.remove('hidden');
+    }
+
+    function closeConfirmationModal() {
+      document.getElementById('confirmation-modal').classList.add('hidden');
+    }
+
+    let bubbliSwRegistration = null;
+    const notifiedChatTimestamps = {};
+    let initialChatsLoadedForNotif = false;
+
+    // Convert any avatar (base64 or URL) into a crisp circular 128x128 PNG data URL so OS notification icons show a clean round profile picture beside the name
+    function buildCircularAvatarIcon(srcUrl) {
+      return new Promise((resolve) => {
+        const fallback = DEFAULT_AVATAR;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            const minSide = Math.min(img.width, img.height);
+            const sx = (img.width - minSide) / 2;
+            const sy = (img.height - minSide) / 2;
+            ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (e) {
+            resolve(srcUrl || fallback);
+          }
+        };
+        img.onerror = () => resolve(srcUrl || fallback);
+        img.src = srcUrl || fallback;
+      });
+    }
+
+    async function registerBubbliNotificationServiceWorker() {
+      if (!('serviceWorker' in navigator)) return null;
+      if (bubbliSwRegistration) return bubbliSwRegistration;
+      try {
+        const swCode = `
+          self.addEventListener('install', (event) => { self.skipWaiting(); });
+          self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()); });
+
+          self.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SHOW_BUBBLI_NOTIF') {
+              const { title, body, icon, tag, chatId, senderName } = event.data.payload;
+              event.waitUntil(
+                self.registration.showNotification(title, {
+                  body: body,
+                  icon: icon || '',
+                  badge: icon || '',
+                  image: '',
+                  tag: tag || ('bubbli-chat-' + chatId),
+                  renotify: true,
+                  requireInteraction: false,
+                  vibrate: [180, 90, 180],
+                  data: { chatId, senderName, url: self.location.href },
+                  actions: [
+                    { action: 'reply', type: 'text', title: 'Reply', placeholder: 'Type a reply...' },
+                    { action: 'mark_read', title: 'Mark as read' }
+                  ]
+                })
+              );
+            }
+          });
+
+          self.addEventListener('notificationclick', (event) => {
+            const notif = event.notification;
+            const action = event.action;
+            const replyText = event.reply || '';
+            const data = notif.data || {};
+            notif.close();
+
+            event.waitUntil((async () => {
+              const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+              if (allClients.length > 0) {
+                const client = allClients[0];
+                if (action !== 'mark_read') {
+                  await client.focus();
+                }
+                client.postMessage({
+                  type: 'BUBBLI_NOTIF_ACTION',
+                  action: action || 'open',
+                  chatId: data.chatId,
+                  replyText: replyText
+                });
+              } else if (action !== 'mark_read' && self.clients.openWindow) {
+                const targetUrl = new URL(self.location.href);
+                if (data.chatId) targetUrl.searchParams.set('openChat', data.chatId);
+                await self.clients.openWindow(targetUrl.toString());
+              }
+            })());
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        bubbliSwRegistration = await navigator.serviceWorker.register(swUrl);
+        return bubbliSwRegistration;
+      } catch (e) {
+        try {
+          bubbliSwRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+          return bubbliSwRegistration;
+        } catch (err) {
+          return null;
+        }
+      }
+    }
+
+    async function handleQuickReplyFromNotification(chatId, replyText) {
+      if (!chatId || !currentUser || !replyText || !replyText.trim()) return;
+      const cleanReply = replyText.trim();
+      await db.collection('chats').doc(chatId).collection('messages').add({
+        senderId: currentUser.uid,
+        senderName: userData?.displayName || 'Me',
+        text: cleanReply,
+        replyTo: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(() => {});
+      await db.collection('chats').doc(chatId).update({
+        lastMessage: cleanReply,
+        lastSenderId: currentUser.uid,
+        [`lastRead.${currentUser.uid}`]: Date.now(),
+        deletedFor: [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(() => {});
+    }
+
+    async function handleMarkReadFromNotification(chatId) {
+      if (!chatId || !currentUser) return;
+      await db.collection('chats').doc(chatId).update({
+        [`lastRead.${currentUser.uid}`]: Date.now()
+      }).catch(() => {});
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', async (event) => {
+        if (!event.data || event.data.type !== 'BUBBLI_NOTIF_ACTION') return;
+        const { action, chatId, replyText } = event.data;
+        if (!chatId || !currentUser) return;
+
+        if (action === 'mark_read') {
+          await handleMarkReadFromNotification(chatId);
+        } else if (action === 'reply' && replyText && replyText.trim()) {
+          await handleQuickReplyFromNotification(chatId, replyText);
+        } else {
+          openChatRoom(chatId);
+        }
+      });
+    }
+
+    // Floating heads-up notification banner with Profile Picture beside Name, Message preview, Reply button/input, and Mark as read button
+    let activeFloatingBannerTimer = null;
+    function showFloatingChatBanner(chatId, senderTitle, messageBody, circularAvatar) {
+      const existing = document.getElementById('bubbli-heads-up-notif');
+      if (existing) existing.remove();
+      clearTimeout(activeFloatingBannerTimer);
+
+      const banner = document.createElement('div');
+      banner.id = 'bubbli-heads-up-notif';
+      banner.className = 'fixed top-3 left-1/2 transform -translate-x-1/2 z-[150] w-[94%] max-w-md liquid-glass rounded-3xl p-3.5 shadow-2xl border border-white/60 animate-slide-up';
+      banner.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <img src="${circularAvatar || DEFAULT_AVATAR}" alt="Avatar" class="w-11 h-11 rounded-full object-cover border-2 border-white shadow-md shrink-0">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold truncate">${escapeHtml(senderTitle)}</h4>
+              <span class="text-[10px] font-bold opacity-60 ml-2 shrink-0">now</span>
+            </div>
+            <p class="text-xs opacity-85 truncate mt-0.5">${escapeHtml(messageBody)}</p>
+
+            <div id="notif-quick-reply-row" class="hidden mt-2 flex items-center space-x-1.5">
+              <input id="notif-quick-reply-input" type="text" placeholder="Reply to ${escapeHtml(senderTitle)}..." class="flex-1 px-3 py-1.5 rounded-xl liquid-glass-sub text-xs focus:outline-none focus:ring-2 focus:ring-purple-400">
+              <button id="notif-quick-reply-send" class="px-3 py-1.5 rounded-xl glossy-button text-xs font-bold shadow-sm">Send</button>
+            </div>
+
+            <div id="notif-action-buttons-row" class="flex items-center justify-end space-x-3 mt-2 pt-1.5 border-t border-purple-300/25">
+              <button id="notif-btn-reply" class="text-xs font-bold text-purple-600 dark:text-purple-300 hover:underline px-2 py-0.5 rounded-lg">Reply</button>
+              <button id="notif-btn-read" class="text-xs font-bold opacity-75 hover:opacity-100 px-2 py-0.5 rounded-lg">Mark as read</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(banner);
+
+      const dismissBanner = () => {
+        clearTimeout(activeFloatingBannerTimer);
+        if (banner && banner.parentNode) banner.remove();
+      };
+
+      banner.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        dismissBanner();
+        openChatRoom(chatId);
+      });
+
+      const replyBtn = banner.querySelector('#notif-btn-reply');
+      const readBtn = banner.querySelector('#notif-btn-read');
+      const replyRow = banner.querySelector('#notif-quick-reply-row');
+      const replyInput = banner.querySelector('#notif-quick-reply-input');
+      const replySend = banner.querySelector('#notif-quick-reply-send');
+
+      replyBtn.onclick = (e) => {
+        e.stopPropagation();
+        clearTimeout(activeFloatingBannerTimer);
+        replyRow.classList.remove('hidden');
+        replyInput.focus();
+      };
+
+      const submitReply = async () => {
+        const val = replyInput.value.trim();
+        if (!val) return;
+        dismissBanner();
+        await handleQuickReplyFromNotification(chatId, val);
+        showToast(`Replied to ${senderTitle}`);
+      };
+
+      replySend.onclick = (e) => {
+        e.stopPropagation();
+        submitReply();
+      };
+      replyInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitReply();
+        }
+      };
+
+      readBtn.onclick = async (e) => {
+        e.stopPropagation();
+        dismissBanner();
+        await handleMarkReadFromNotification(chatId);
+      };
+
+      activeFloatingBannerTimer = setTimeout(dismissBanner, 7500);
+    }
+
+    async function requestDeviceNotificationPermission(silent = true) {
+      if (!("Notification" in window)) {
+        if (!silent) showToast("Notifications are not supported on this browser/device.", "error");
+        return;
+      }
+      try {
+        let permission = Notification.permission;
+        if (permission === "default") {
+          permission = await Notification.requestPermission();
+        }
+        if (permission === "granted") {
+          const reg = await registerBubbliNotificationServiceWorker();
+          if (!silent) showToast("Notifications enabled! You'll get alerts even outside the app.");
+          if (firebase.messaging && firebase.messaging.isSupported()) {
+            const messaging = firebase.messaging();
+            const token = await messaging.getToken({ serviceWorkerRegistration: reg || undefined }).catch(() => null);
+            if (token && currentUser) {
+              await db.collection('users').doc(currentUser.uid).update({ fcmToken: token }).catch(() => {});
+            }
+          }
+        } else if (!silent) {
+          showToast("Please allow notifications in your phone/browser settings.", "error");
+        }
+      } catch (e) {
+        if (!silent) showToast("Could not enable notifications.", "error");
+      }
+    }
+
+    async function triggerIncomingChatNotification(chatId, senderTitle, messageBody, senderAvatar) {
+      const circularIcon = await buildCircularAvatarIcon(senderAvatar || DEFAULT_AVATAR);
+
+      // Show floating banner with circular avatar beside name + Reply & Mark as read buttons when page is visible
+      if (!document.hidden) {
+        showFloatingChatBanner(chatId, senderTitle, messageBody, circularIcon);
+      }
+
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      // Support Android WebView native bridge if wrapped in an APK
+      if (window.Android && typeof window.Android.showChatNotification === 'function') {
+        try {
+          window.Android.showChatNotification(chatId, senderTitle, messageBody, circularIcon);
+          return;
+        } catch (e) {}
+      }
+
+      const reg = await registerBubbliNotificationServiceWorker();
+      if (reg && reg.active) {
+        reg.active.postMessage({
+          type: 'SHOW_BUBBLI_NOTIF',
+          payload: {
+            title: senderTitle,
+            body: messageBody,
+            icon: circularIcon,
+            tag: 'bubbli-chat-' + chatId,
+            chatId: chatId,
+            senderName: senderTitle
+          }
+        });
+      } else if (reg && typeof reg.showNotification === 'function') {
+        reg.showNotification(senderTitle, {
+          body: messageBody,
+          icon: circularIcon,
+          badge: circularIcon,
+          tag: 'bubbli-chat-' + chatId,
+          renotify: true,
+          data: { chatId },
+          actions: [
+            { action: 'reply', type: 'text', title: 'Reply', placeholder: 'Type a reply...' },
+            { action: 'mark_read', title: 'Mark as read' }
+          ]
+        });
+      } else {
+        const n = new Notification(senderTitle, {
+          body: messageBody,
+          icon: circularIcon,
+          tag: 'bubbli-chat-' + chatId
+        });
+        n.onclick = () => {
+          window.focus();
+          openChatRoom(chatId);
+          n.close();
+        };
+      }
+    }
+
+    let authMode = 'login';
+    function switchAuthTab(mode) {
+      authMode = mode;
+      document.getElementById('tab-login').className = mode === 'login' ? "flex-1 py-2 text-sm font-bold rounded-xl glossy-button shadow-sm" : "flex-1 py-2 text-sm font-bold rounded-xl opacity-75";
+      document.getElementById('tab-signup').className = mode === 'signup' ? "flex-1 py-2 text-sm font-bold rounded-xl glossy-button shadow-sm" : "flex-1 py-2 text-sm font-bold rounded-xl opacity-75";
+      document.getElementById('signup-fields').classList.toggle('hidden', mode === 'login');
+      document.getElementById('forgot-password-link-wrap').classList.toggle('hidden', mode === 'signup');
+      document.getElementById('auth-btn-text').innerText = mode === 'login' ? "Log In" : "Create Account";
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const btn = document.getElementById('auth-submit-btn');
+      btn.disabled = true;
+
+      try {
+        if (authMode === 'login') {
+          await auth.signInWithEmailAndPassword(email, password);
+          showToast("Welcome back to Bubbli!");
+        } else {
+          const displayName = document.getElementById('auth-displayname').value.trim();
+          const username = document.getElementById('auth-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+          if (!displayName || !username) throw new Error("Display name and username are required.");
+          
+          const existing = await db.collection('users').where('username', '==', username).get();
+          if (!existing.empty) throw new Error("That username is taken.");
+
+          const cred = await auth.createUserWithEmailAndPassword(email, password);
+          await db.collection('users').doc(cred.user.uid).set({
+            uid: cred.user.uid,
+            displayName,
+            username,
+            bio: "Hey there! I am using Bubbli.",
+            email,
+            photoURL: DEFAULT_AVATAR,
+            followers: [],
+            following: [],
+            blocked: [],
+            online: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          showToast("Account created!");
+        }
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleGoogleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try {
+        const result = await auth.signInWithPopup(provider);
+        await ensureUserProfileExists(result.user);
+        showToast("Signed in with Google!");
+      } catch (err) {
+        if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+          await auth.signInWithRedirect(provider);
+        } else {
+          showToast(err.message, "error");
+        }
+      }
+    }
+
+    function initAuthListener() {
+      auth.getRedirectResult().then(async (result) => {
+        if (result && result.user) await ensureUserProfileExists(result.user);
+      }).catch(() => {});
+
+      auth.onAuthStateChanged(async (user) => {
+        currentUser = user;
+        if (user) {
+          document.getElementById('auth-screen').classList.add('hidden');
+          document.getElementById('main-app').classList.remove('hidden');
+          try {
+            localStorage.setItem('bubbli_session_hint', JSON.stringify({
+              uid: user.uid,
+              photoURL: user.photoURL || DEFAULT_AVATAR
+            }));
+          } catch (e) {}
+          await ensureUserProfileExists(user);
+          await loadUserData(user.uid);
+          if (navigator.onLine === false && cachedChatsDocs.length === 0) {
+            const offlineSnap = loadOfflineChatsSnapshot();
+            if (offlineSnap.length > 0) {
+              cachedChatsDocs = offlineSnap;
+              renderChatsList(cachedChatsDocs);
+            }
+          }
+          setupPresence(user.uid);
+          initRealtimeListeners();
+          requestDeviceNotificationPermission(true);
+          try {
+            const params = new URLSearchParams(window.location.search);
+            const openChatParam = params.get('openChat');
+            if (openChatParam) {
+              window.history.replaceState({}, '', window.location.pathname);
+              setTimeout(() => openChatRoom(openChatParam), 500);
+            }
+          } catch (e) {}
+        } else {
+          try { localStorage.removeItem('bubbli_session_hint'); } catch (e) {}
+          cleanupListeners();
+          document.getElementById('main-app').classList.add('hidden');
+          document.getElementById('auth-screen').classList.remove('hidden');
+        }
+      });
+    }
+
+    async function ensureUserProfileExists(user) {
+      if (!user) return;
+      const userRef = db.collection('users').doc(user.uid);
+      const doc = await userRef.get();
+      if (!doc.exists) {
+        const baseUsername = (user.email ? user.email.split('@')[0] : 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+        await userRef.set({
+          uid: user.uid,
+          displayName: user.displayName || 'Bubbli User',
+          username: baseUsername + Math.floor(100 + Math.random() * 900),
+          bio: "Hey there! I am using Bubbli.",
+          email: user.email || '',
+          photoURL: user.photoURL || DEFAULT_AVATAR,
+          followers: [],
+          following: [],
+          blocked: [],
+          online: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+
+    async function loadUserData(uid) {
+      const doc = await db.collection('users').doc(uid).get();
+      if (doc.exists) {
+        userData = doc.data();
+        userCache[uid] = userData;
+        document.getElementById('header-avatar').src = userData.photoURL || DEFAULT_AVATAR;
+        const settingsAvatar = document.getElementById('settings-avatar');
+        if (settingsAvatar) settingsAvatar.src = userData.photoURL || DEFAULT_AVATAR;
+        const nameInput = document.getElementById('settings-displayname-input');
+        if (nameInput) nameInput.value = userData.displayName || '';
+        const usernameInput = document.getElementById('settings-username-input');
+        if (usernameInput) usernameInput.value = userData.username || '';
+        const bioInput = document.getElementById('settings-bio-input');
+        if (bioInput) bioInput.value = userData.bio || '';
+
+        const cfgFriends = document.getElementById('cfg-count-friends');
+        const cfgFollowers = document.getElementById('cfg-count-followers');
+        const cfgFollowing = document.getElementById('cfg-count-following');
+        if (cfgFriends) cfgFriends.innerText = cachedFriends.length;
+        if (cfgFollowers) cfgFollowers.innerText = (userData.followers || []).length;
+        if (cfgFollowing) cfgFollowing.innerText = (userData.following || []).length;
+        try {
+          localStorage.setItem('bubbli_session_hint', JSON.stringify({
+            uid: uid,
+            displayName: userData.displayName || '',
+            username: userData.username || '',
+            photoURL: userData.photoURL || DEFAULT_AVATAR
+          }));
+        } catch (e) {}
+      }
+    }
+
+    function setupPresence(uid) {
+      const userRef = db.collection('users').doc(uid);
+      userRef.update({ online: true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+      
+      setInterval(() => {
+        if (currentUser) {
+          userRef.update({ online: true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+        }
+      }, 15000);
+
+      window.addEventListener('beforeunload', () => {
+        userRef.update({ online: false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+      });
+    }
+
+    function confirmLogout() {
+      showConfirmationModal("Log Out", "Are you sure you want to log out of Bubbli?", () => {
+        if (currentUser) {
+          db.collection('users').doc(currentUser.uid).update({ online: false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+        }
+        auth.signOut();
+        showToast("Logged out");
+      });
+    }
+
+    async function openForgotPasswordScreen() {
+      const emailInput = document.getElementById('auth-email').value.trim();
+      if (!emailInput) {
+        showToast("Please enter your email address in the email field first.", "error");
+        return;
+      }
+      
+      document.getElementById('forgot-loading-subtitle').innerText = `Sending Password Reset to (${emailInput})`;
+      document.getElementById('forgot-loading-state').classList.remove('hidden');
+      document.getElementById('forgot-success-state').classList.add('hidden');
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('forgot-password-screen').classList.remove('hidden');
+      pushView('forgotPassword');
+
+      try {
+        await auth.sendPasswordResetEmail(emailInput);
+      } catch (err) {}
+
+      setTimeout(() => {
+        document.getElementById('forgot-loading-state').classList.add('hidden');
+        document.getElementById('forgot-success-state').classList.remove('hidden');
+      }, 5000);
+    }
+
+    async function triggerProfileResetPassword() {
+      if (!userData || !userData.email) {
+        showToast("No email address found on profile.", "error");
+        return;
+      }
+      try {
+        await auth.sendPasswordResetEmail(userData.email);
+        showToast(`Password reset email sent to (${userData.email})`);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    function cleanupListeners() {
+      unlisteners.forEach(unsub => unsub());
+      unlisteners = [];
+    }
+
+    async function getCachedUser(uid) {
+      if (userCache[uid]) return userCache[uid];
+      const doc = await db.collection('users').doc(uid).get();
+      if (doc.exists) {
+        userCache[uid] = doc.data();
+        return userCache[uid];
+      }
+      return null;
+    }
+
+    function initRealtimeListeners() {
+      if (!currentUser) return;
+      cleanupListeners();
+
+      const userSub = db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+        if (doc.exists) {
+          userData = doc.data();
+          userCache[currentUser.uid] = userData;
+          renderChatsList(cachedChatsDocs);
+          if (activeChatId && activeChatData) {
+            refreshChatRoomAvailabilityState();
+          }
+        }
+      });
+      unlisteners.push(userSub);
+
+      const allUsersSub = db.collection('users').onSnapshot(snapshot => {
+        allUsersCache = snapshot.docs.map(d => d.data());
+        snapshot.docs.forEach(d => { userCache[d.id] = d.data(); });
+        updateOnlineFriendsCarousel();
+      });
+      unlisteners.push(allUsersSub);
+
+      const friendSub = db.collection('friendships')
+        .where('members', 'array-contains', currentUser.uid)
+        .onSnapshot(async snapshot => {
+          const friendUids = [];
+          snapshot.docs.forEach(doc => {
+            const other = (doc.data().members || []).find(m => m !== currentUser.uid);
+            if (other) friendUids.push(other);
+          });
+          const friends = [];
+          for (const fUid of friendUids) {
+            const u = await getCachedUser(fUid);
+            if (u) friends.push(u);
+          }
+          cachedFriends = friends;
+          renderFriendsList(friends);
+          renderChatsList(cachedChatsDocs);
+        });
+      unlisteners.push(friendSub);
+
+      const reqSub = db.collection('friendRequests')
+        .where('to', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .onSnapshot(async snapshot => {
+          const count = snapshot.docs.length;
+          document.getElementById('header-request-badge').innerText = count;
+          document.getElementById('header-request-badge').classList.toggle('hidden', count === 0);
+          document.getElementById('nav-request-dot').classList.toggle('hidden', count === 0);
+          renderRequestsList(snapshot.docs);
+        });
+      unlisteners.push(reqSub);
+
+      const sentReqSub = db.collection('friendRequests')
+        .where('from', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .onSnapshot(snapshot => {
+          pendingRequestsCache = snapshot.docs.map(d => d.data().to);
+        });
+      unlisteners.push(sentReqSub);
+
+      initialChatsLoadedForNotif = false;
+      const chatSub = db.collection('chats')
+        .where('members', 'array-contains', currentUser.uid)
+        .onSnapshot(async snapshot => {
+          const sortedDocs = [...snapshot.docs].sort((a, b) => {
+            const tA = a.data().updatedAt ? a.data().updatedAt.toMillis() : 0;
+            const tB = b.data().updatedAt ? b.data().updatedAt.toMillis() : 0;
+            return tB - tA;
+          });
+
+          // Check for incoming messages to fire system notification with Reply & Mark as read
+          for (const doc of sortedDocs) {
+            const c = doc.data();
+            const updatedMs = c.updatedAt && c.updatedAt.toMillis ? c.updatedAt.toMillis() : 0;
+            const prevSeenMs = notifiedChatTimestamps[doc.id] || 0;
+
+            if (!initialChatsLoadedForNotif) {
+              notifiedChatTimestamps[doc.id] = updatedMs;
+              continue;
+            }
+
+            if (updatedMs > prevSeenMs) {
+              notifiedChatTimestamps[doc.id] = updatedMs;
+              const isFromOther = c.lastSenderId && c.lastSenderId !== currentUser.uid;
+              const isMuted = (userData?.mutedChats || []).includes(doc.id);
+              const isAppBackgrounded = document.hidden || !document.hasFocus();
+              const isDifferentChatOpen = activeChatId !== doc.id;
+
+              if (isFromOther && !isMuted && (isAppBackgrounded || isDifferentChatOpen)) {
+                const senderUser = await getCachedUser(c.lastSenderId);
+                let title = senderUser ? senderUser.displayName : 'New Message';
+                let avatar = senderUser ? (senderUser.photoURL || DEFAULT_AVATAR) : DEFAULT_AVATAR;
+                if (c.type === 'group') {
+                  title = `${senderUser ? senderUser.displayName : 'Someone'} • ${c.name || 'Group'}`;
+                  avatar = c.photoURL || avatar;
+                }
+                const bodyText = c.lastMessage || 'Sent you a message';
+                triggerIncomingChatNotification(doc.id, title, bodyText, avatar);
+              }
+            }
+          }
+          initialChatsLoadedForNotif = true;
+
+          cachedChatsDocs = sortedDocs;
+          saveOfflineChatsSnapshot(sortedDocs);
+          renderChatsList(cachedChatsDocs);
+        }, () => {
+          const cached = loadOfflineChatsSnapshot();
+          if (cached.length > 0 && cachedChatsDocs.length === 0) {
+            cachedChatsDocs = cached;
+            renderChatsList(cachedChatsDocs);
+          }
+        });
+      unlisteners.push(chatSub);
+    }
+
+    function isUserReallyOnline(uData) {
+      if (!uData || !uData.online) return false;
+      if (!uData.lastSeen) return true;
+      const lastSeenTime = uData.lastSeen.toMillis ? uData.lastSeen.toMillis() : new Date(uData.lastSeen).getTime();
+      return (Date.now() - lastSeenTime) < 45000;
+    }
+
+    function updateOnlineFriendsCarousel() {
+      const container = document.getElementById('online-friends-carousel');
+      const friendUids = cachedFriends.map(f => f.uid);
+      const onlineFriends = allUsersCache.filter(u => friendUids.includes(u.uid) && isUserReallyOnline(u));
+
+      if (onlineFriends.length === 0) {
+        container.innerHTML = `<div class="text-xs opacity-60 px-1 italic">No friends active right now</div>`;
+        return;
+      }
+      container.innerHTML = onlineFriends.map(f => `
+        <div onclick="startPrivateChat('${f.uid}')" class="flex flex-col items-center space-y-1 cursor-pointer shrink-0">
+          <div class="relative">
+            <img src="${f.photoURL || DEFAULT_AVATAR}" class="w-12 h-12 rounded-full object-cover border-2 border-pink-400 shadow-sm">
+            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white"></span>
+          </div>
+          <span class="text-[11px] font-bold truncate w-14 text-center">${escapeHtml(f.displayName)}</span>
+        </div>
+      `).join('');
+    }
+
+    function filterFriendsList(query) {
+      const q = query.toLowerCase();
+      const filtered = cachedFriends.filter(f =>
+        (f.displayName || '').toLowerCase().includes(q) ||
+        (f.username || '').toLowerCase().includes(q)
+      );
+      renderFriendsList(filtered);
+    }
+
+    function renderFriendsList(friends) {
+      const container = document.getElementById('friends-list');
+      if (friends.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No friends yet. Tap "Add Friend" to discover people!</div>`;
+        return;
+      }
+      container.innerHTML = friends.map(f => `
+        <div onclick="openPublicProfile('${f.uid}')" class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:opacity-95 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <img src="${f.photoURL || DEFAULT_AVATAR}" class="w-11 h-11 rounded-full object-cover shadow-sm">
+              ${isUserReallyOnline(f) ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></span>' : ''}
+            </div>
+            <div>
+              <h4 class="text-sm font-bold">${escapeHtml(f.displayName)}</h4>
+              <p class="text-xs opacity-70">@${escapeHtml(f.username)}</p>
+            </div>
+          </div>
+          <button onclick="event.stopPropagation(); startPrivateChat('${f.uid}')" class="px-3 py-1.5 rounded-full glossy-button text-xs font-bold shadow-sm">Chat</button>
+        </div>
+      `).join('');
+    }
+
+    function openDiscoverUsersPage() {
+      document.getElementById('discover-search-input').value = '';
+      renderDiscoverUsers(allUsersCache);
+      document.getElementById('discover-users-page').classList.remove('hidden');
+      pushView('discoverUsers');
+    }
+
+    function filterDiscoverUsers(query) {
+      const q = query.toLowerCase().trim();
+      const filtered = allUsersCache.filter(u => {
+        if (u.uid === currentUser.uid) return false;
+        return (u.displayName || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q);
+      });
+      renderDiscoverUsers(filtered);
+    }
+
+    function renderDiscoverUsers(users) {
+      const container = document.getElementById('discover-users-list');
+      const otherUsers = users.filter(u => u.uid !== currentUser.uid);
+      if (otherUsers.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No users found.</div>`;
+        return;
+      }
+      container.innerHTML = otherUsers.map(u => `
+        <div onclick="openPublicProfile('${u.uid}')" class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:opacity-95 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-11 h-11 rounded-full object-cover shadow-sm">
+            <div>
+              <h4 class="text-sm font-bold">${escapeHtml(u.displayName)}</h4>
+              <p class="text-xs opacity-70">@${escapeHtml(u.username)}</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-purple-600 dark:text-purple-300">View Profile →</span>
+        </div>
+      `).join('');
+    }
+
+    async function openBlockedUsersPage() {
+      const container = document.getElementById('blocked-users-list');
+      const blockedUids = userData?.blocked || [];
+      if (blockedUids.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No blocked users.</div>`;
+        document.getElementById('blocked-users-page').classList.remove('hidden');
+        pushView('blockedUsers');
+        return;
+      }
+
+      let html = '';
+      for (const bUid of blockedUids) {
+        const u = await getCachedUser(bUid);
+        if (!u) continue;
+        html += `
+          <div class="liquid-glass-sub p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3">
+              <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-10 h-10 rounded-full object-cover">
+              <div>
+                <h4 class="text-xs font-bold">${escapeHtml(u.displayName)}</h4>
+                <p class="text-[10px] opacity-70">@${escapeHtml(u.username)}</p>
+              </div>
+            </div>
+            <button onclick="unblockUserFromSettings('${u.uid}')" class="px-3 py-1.5 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-300 text-xs font-bold shadow-sm">Unblock</button>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      document.getElementById('blocked-users-page').classList.remove('hidden');
+      pushView('blockedUsers');
+    }
+
+    async function unblockUserFromSettings(targetUid) {
+      const blocked = (userData?.blocked || []).filter(id => id !== targetUid);
+      await db.collection('users').doc(currentUser.uid).update({ blocked });
+      userData.blocked = blocked;
+      showToast("User unblocked.");
+      openBlockedUsersPage();
+    }
+
+    let viewingUserId = null;
+    let viewingUserData = null;
+
+    async function openPublicProfile(uid) {
+      viewingUserId = uid;
+      const u = await getCachedUser(uid);
+      if (!u) return;
+      viewingUserData = u;
+
+      document.getElementById('pub-avatar').src = u.photoURL || DEFAULT_AVATAR;
+      document.getElementById('pub-displayname').innerText = u.displayName;
+      document.getElementById('pub-username').innerText = '@' + u.username;
+      document.getElementById('pub-bio').innerText = u.bio || "No bio yet.";
+      
+      let joinDateStr = "Member";
+      if (u.createdAt && u.createdAt.toDate) {
+        joinDateStr = "Joined " + u.createdAt.toDate().toLocaleDateString([], { month: 'short', year: 'numeric' });
+      }
+      document.getElementById('pub-joindate').innerText = joinDateStr;
+
+      const friendSnap = await db.collection('friendships').where('members', 'array-contains', uid).get();
+      document.getElementById('pub-count-friends').innerText = friendSnap.docs.length;
+      document.getElementById('pub-count-followers').innerText = (u.followers || []).length;
+      document.getElementById('pub-count-following').innerText = (u.following || []).length;
+
+      const isFollowing = (userData.following || []).includes(uid);
+      const followBtn = document.getElementById('pub-follow-btn');
+      followBtn.innerText = isFollowing ? 'Following' : 'Follow';
+      followBtn.className = isFollowing ? 'w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm' : 'w-full py-3 rounded-2xl glossy-button font-bold text-xs shadow-md';
+
+      const isFriend = cachedFriends.some(f => f.uid === uid);
+      const isPending = pendingRequestsCache.includes(uid);
+      const friendBtn = document.getElementById('pub-friend-btn');
+      
+      if (isFriend) {
+        friendBtn.innerText = 'Unfriend';
+        friendBtn.className = 'w-full py-3 rounded-2xl bg-red-500/15 text-red-500 font-bold text-xs shadow-sm';
+      } else if (isPending) {
+        friendBtn.innerText = 'Pending...';
+        friendBtn.className = 'w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs opacity-60 cursor-not-allowed shadow-sm';
+      } else {
+        friendBtn.innerText = 'Add Friend';
+        friendBtn.className = 'w-full py-3 rounded-2xl liquid-glass-sub font-bold text-xs shadow-sm';
+      }
+
+      document.getElementById('public-profile-page').classList.remove('hidden');
+      pushView('publicProfile');
+    }
+
+    async function toggleFollowUser() {
+      if (!viewingUserId || !currentUser) return;
+      const myFollowing = userData.following || [];
+      const targetUserRef = db.collection('users').doc(viewingUserId);
+      const myUserRef = db.collection('users').doc(currentUser.uid);
+
+      const targetDoc = await targetUserRef.get();
+      if (!targetDoc.exists) return;
+      let targetFollowers = targetDoc.data().followers || [];
+
+      if (myFollowing.includes(viewingUserId)) {
+        const newFollowing = myFollowing.filter(id => id !== viewingUserId);
+        targetFollowers = targetFollowers.filter(id => id !== currentUser.uid);
+        await myUserRef.update({ following: newFollowing });
+        await targetUserRef.update({ followers: targetFollowers });
+        userData.following = newFollowing;
+        showToast("Unfollowed");
+      } else {
+        myFollowing.push(viewingUserId);
+        targetFollowers.push(currentUser.uid);
+        await myUserRef.update({ following: myFollowing });
+        await targetUserRef.update({ followers: targetFollowers });
+        userData.following = myFollowing;
+        showToast("Following!");
+      }
+      openPublicProfile(viewingUserId);
+    }
+
+    async function toggleFriendStatus() {
+      if (!viewingUserId || pendingRequestsCache.includes(viewingUserId)) return;
+      const isFriend = cachedFriends.some(f => f.uid === viewingUserId);
+
+      if (isFriend) {
+        const snap = await db.collection('friendships').where('members', 'array-contains', currentUser.uid).get();
+        for (const doc of snap.docs) {
+          if ((doc.data().members || []).includes(viewingUserId)) await doc.ref.delete();
+        }
+        showToast("Unfriended");
+      } else {
+        await db.collection('friendRequests').add({
+          from: currentUser.uid,
+          to: viewingUserId,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        pendingRequestsCache.push(viewingUserId);
+        showToast("Friend request sent!");
+      }
+      openPublicProfile(viewingUserId);
+    }
+
+    async function blockUserFromProfile() {
+      if (!viewingUserId) return;
+      const blocked = userData.blocked || [];
+      if (!blocked.includes(viewingUserId)) {
+        blocked.push(viewingUserId);
+        await db.collection('users').doc(currentUser.uid).update({ blocked });
+        userData.blocked = blocked;
+        showToast("Blocked user.");
+        navigateBack();
+      }
+    }
+
+    function startPrivateChatFromProfile() {
+      navigateBack();
+      startPrivateChat(viewingUserId);
+    }
+
+    async function openRelationshipList(type) {
+      if (!viewingUserData) return;
+      const titleEl = document.getElementById('rel-page-title');
+      const container = document.getElementById('relationship-items-container');
+      titleEl.innerText = type.charAt(0).toUpperCase() + type.slice(1);
+
+      let uids = [];
+      if (type === 'friends') {
+        const snap = await db.collection('friendships').where('members', 'array-contains', viewingUserData.uid).get();
+        snap.docs.forEach(doc => {
+          const other = (doc.data().members || []).find(m => m !== viewingUserData.uid);
+          if (other) uids.push(other);
+        });
+      } else if (type === 'followers') {
+        uids = viewingUserData.followers || [];
+      } else if (type === 'following') {
+        uids = viewingUserData.following || [];
+      }
+
+      if (uids.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No ${type} found.</div>`;
+        document.getElementById('relationship-list-page').classList.remove('hidden');
+        pushView('relationshipList');
+        return;
+      }
+
+      let html = '';
+      for (const uid of uids) {
+        const u = await getCachedUser(uid);
+        if (!u) continue;
+        const isMe = uid === currentUser.uid;
+        html += `
+          <div onclick="openPublicProfile('${u.uid}')" class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:opacity-95 shadow-sm">
+            <div class="flex items-center space-x-3">
+              <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-11 h-11 rounded-full object-cover shadow-sm">
+              <div>
+                <h4 class="text-sm font-bold flex items-center space-x-1.5">
+                  <span>${escapeHtml(u.displayName)}</span>
+                  ${isMe ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-300">(YOU)</span>' : ''}
+                </h4>
+                <p class="text-xs opacity-70">@${escapeHtml(u.username)}</p>
+              </div>
+            </div>
+            <span class="text-xs font-bold opacity-75">View →</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      document.getElementById('relationship-list-page').classList.remove('hidden');
+      pushView('relationshipList');
+    }
+
+    async function renderRequestsList(docs) {
+      const container = document.getElementById('requests-list');
+      if (docs.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No pending friend requests.</div>`;
+        return;
+      }
+      let html = '';
+      for (const doc of docs) {
+        const req = doc.data();
+        const sender = await getCachedUser(req.from);
+        if (!sender) continue;
+        html += `
+          <div class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3">
+              <img src="${sender.photoURL || DEFAULT_AVATAR}" class="w-11 h-11 rounded-full object-cover">
+              <div>
+                <h4 class="text-sm font-bold">${escapeHtml(sender.displayName)}</h4>
+                <p class="text-xs opacity-70">@${escapeHtml(sender.username)}</p>
+              </div>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="acceptFriendRequest('${doc.id}', '${req.from}')" class="px-3 py-1.5 rounded-xl glossy-button text-xs font-bold shadow-sm">Accept</button>
+              <button onclick="declineFriendRequest('${doc.id}')" class="px-3 py-1.5 rounded-xl liquid-glass-sub text-xs font-bold shadow-sm">Decline</button>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    async function acceptFriendRequest(reqId, fromUid) {
+      await db.collection('friendRequests').doc(reqId).update({ status: 'accepted' });
+      await db.collection('friendships').add({
+        members: [currentUser.uid, fromUid],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast("Friend request accepted!");
+    }
+
+    async function declineFriendRequest(reqId) {
+      await db.collection('friendRequests').doc(reqId).update({ status: 'declined' });
+      showToast("Request declined");
+    }
+
+    function setChatCategory(cat) {
+      currentChatCategory = cat;
+      ['all', 'unread', 'requests'].forEach(c => {
+        const btn = document.getElementById(`cat-btn-${c}`);
+        btn.className = c === cat ? "flex-1 py-2 text-xs font-bold rounded-xl glossy-button shadow-sm" : "flex-1 py-2 text-xs font-bold rounded-xl opacity-75";
+      });
+      renderChatsList(cachedChatsDocs);
+    }
+
+    function filterChatsList(query) {
+      renderChatsList(cachedChatsDocs, query);
+    }
+
+    function isGroupPendingRequestForUser(chat) {
+      if (!chat || chat.type !== 'group' || !currentUser) return false;
+      if (chat.createdBy === currentUser.uid) return false;
+      const acceptedBy = chat.acceptedBy || [];
+      return !acceptedBy.includes(currentUser.uid);
+    }
+
+    async function renderChatsList(docs, searchQuery = '') {
+      const container = document.getElementById('chats-list');
+      const q = searchQuery.toLowerCase();
+
+      const filteredDocs = [];
+      for (const doc of docs) {
+        const chat = doc.data();
+        if (chat.kicked && chat.kicked.includes(currentUser.uid)) continue;
+        if (chat.deletedFor && chat.deletedFor.includes(currentUser.uid)) continue;
+
+        let name = chat.name || "Chat";
+        let isUnread = false;
+        let otherUid = null;
+        const isGroupInvitePending = isGroupPendingRequestForUser(chat);
+
+        if (chat.type === 'private') {
+          otherUid = (chat.members || []).find(m => m !== currentUser.uid);
+          const u = await getCachedUser(otherUid);
+          if (u) name = u.displayName;
+
+          const lastReadTime = chat.lastRead?.[currentUser.uid] || 0;
+          const updatedAtTime = chat.updatedAt ? chat.updatedAt.toMillis() : 0;
+          if (chat.lastSenderId && chat.lastSenderId !== currentUser.uid && updatedAtTime > lastReadTime) {
+            isUnread = true;
+          }
+        }
+
+        if (currentChatCategory === 'all') {
+          if (isGroupInvitePending) continue;
+        } else if (currentChatCategory === 'unread') {
+          if (isGroupInvitePending || !isUnread) continue;
+        } else if (currentChatCategory === 'requests') {
+          if (!isGroupInvitePending) continue;
+        }
+
+        if (q && !name.toLowerCase().includes(q)) continue;
+        filteredDocs.push({ doc, name, isUnread, otherUid, isGroupInvitePending });
+      }
+
+      if (filteredDocs.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-sm opacity-70">No conversations in this view.</div>`;
+        return;
+      }
+
+      let html = '';
+      for (const item of filteredDocs) {
+        const chat = item.doc.data();
+        let name = item.name;
+        let avatar = chat.photoURL || DEFAULT_AVATAR;
+        let isOnline = false;
+
+        if (chat.type === 'private') {
+          const u = await getCachedUser(item.otherUid);
+          if (u) {
+            avatar = u.photoURL || DEFAULT_AVATAR;
+            isOnline = isUserReallyOnline(u);
+          }
+        }
+
+        let subtitleText = chat.lastMessage || 'Started a conversation';
+        if (chat.deletedGroup) {
+          subtitleText = 'This group chat has been deleted';
+        } else if (item.isGroupInvitePending) {
+          subtitleText = 'Someone added you in this group';
+        }
+
+        let timeStr = chat.updatedAt ? chat.updatedAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const safeName = encodeURIComponent(name);
+        const isGroup = chat.type === 'group';
+
+        html += `
+          <div ontouchstart="startChatBarTouchTimer('${item.doc.id}', '${safeName}', '${item.otherUid || ''}', ${isGroup})"
+               onmousedown="startChatBarTouchTimer('${item.doc.id}', '${safeName}', '${item.otherUid || ''}', ${isGroup})"
+               oncontextmenu="event.preventDefault(); openChatBarOptions('${item.doc.id}', '${safeName}', '${item.otherUid || ''}', ${isGroup});"
+               onclick="openChatRoom('${item.doc.id}')" 
+               class="liquid-glass p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:opacity-95 shadow-sm ${item.isUnread ? 'border-l-4 border-purple-500' : ''}">
+            <div class="flex items-center space-x-3 truncate flex-1">
+              <div class="relative shrink-0" onclick="event.stopPropagation(); ${chat.type === 'private' ? `openPublicProfile('${item.otherUid}')` : `openChatRoom('${item.doc.id}')`}">
+                <img src="${avatar}" class="w-12 h-12 rounded-full object-cover shadow-sm">
+                ${isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></span>' : ''}
+              </div>
+              <div class="truncate flex-1">
+                <h4 class="text-sm font-bold flex items-center space-x-1.5">
+                  <span class="truncate">${escapeHtml(name)}</span>
+                  ${item.isUnread ? '<span class="w-2 h-2 bg-purple-600 rounded-full"></span>' : ''}
+                </h4>
+                <p class="text-xs opacity-75 truncate">${escapeHtml(subtitleText)}</p>
+              </div>
+            </div>
+            <span class="text-[10px] opacity-60 shrink-0 ml-2 font-medium">${timeStr}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    let chatBarTouchTimer = null;
+    function startChatBarTouchTimer(chatId, encodedName, otherUid, isGroup) {
+      clearTimeout(chatBarTouchTimer);
+      chatBarTouchTimer = setTimeout(() => openChatBarOptions(chatId, encodedName, otherUid, isGroup), 500);
+    }
+    window.addEventListener('touchend', () => clearTimeout(chatBarTouchTimer));
+    window.addEventListener('mouseup', () => clearTimeout(chatBarTouchTimer));
+
+    function openChatBarOptions(chatId, encodedName, otherUid, isGroup) {
+      selectedChatBarId = chatId;
+      selectedChatBarName = decodeURIComponent(encodedName);
+      selectedChatBarOtherUid = otherUid;
+      selectedChatBarIsGroup = isGroup;
+
+      document.getElementById('chatbar-opt-title').innerText = selectedChatBarName;
+      document.getElementById('chatbar-block-btn').classList.toggle('hidden', isGroup);
+      document.getElementById('chatbar-leave-btn').classList.toggle('hidden', !isGroup);
+
+      document.getElementById('chatbar-options-backdrop').classList.remove('hidden');
+      pushView('chatBarOptions');
+    }
+
+    async function executeChatBarAction(actionType) {
+      navigateBack();
+      if (!selectedChatBarId) return;
+
+      if (actionType === 'mute') {
+        const muted = (userData.mutedChats || []).includes(selectedChatBarId);
+        const updatedMuted = muted ? (userData.mutedChats || []).filter(id => id !== selectedChatBarId) : [...(userData.mutedChats || []), selectedChatBarId];
+        await db.collection('users').doc(currentUser.uid).update({ mutedChats: updatedMuted });
+        showToast(muted ? "Chat unmuted" : "Chat muted");
+      } else if (actionType === 'delete') {
+        showConfirmationModal("Delete Conversation", "Are you sure you want to remove this conversation from your list?", async () => {
+          await db.collection('chats').doc(selectedChatBarId).update({
+            deletedFor: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+          });
+          showToast("Conversation deleted");
+          renderChatsList(cachedChatsDocs);
+        });
+      } else if (actionType === 'block' && selectedChatBarOtherUid) {
+        showConfirmationModal("Block Person", `Are you sure you want to block ${selectedChatBarName}?`, async () => {
+          const blocked = userData.blocked || [];
+          if (!blocked.includes(selectedChatBarOtherUid)) {
+            blocked.push(selectedChatBarOtherUid);
+            await db.collection('users').doc(currentUser.uid).update({ blocked });
+            userData.blocked = blocked;
+            showToast(`Blocked ${selectedChatBarName}`);
+          }
+        });
+      } else if (actionType === 'leaveGroup') {
+        showConfirmationModal("Leave Group Chat", "Are you sure you want to leave this group chat?", async () => {
+          const chatRef = db.collection('chats').doc(selectedChatBarId);
+          const chatDoc = await chatRef.get();
+          if (!chatDoc.exists) return;
+          const chatData = chatDoc.data();
+          const members = (chatData.members || []).filter(id => id !== currentUser.uid);
+          const admins = (chatData.admins || []).filter(id => id !== currentUser.uid);
+          if (admins.length === 0 && members.length > 0) admins.push(members[0]);
+
+          await chatRef.update({ members, admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          await chatRef.collection('messages').add({
+            isSystemMessage: true,
+            text: `${userData.displayName} has left the group`,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          showToast("You left the group.");
+          renderChatsList(cachedChatsDocs);
+        });
+      }
+    }
+
+    async function startPrivateChat(friendUid) {
+      const existingDoc = cachedChatsDocs.find(doc => {
+        const d = doc.data();
+        return d.type === 'private' && d.members && d.members.includes(friendUid) && d.members.length === 2;
+      });
+      if (existingDoc) {
+        await existingDoc.ref.update({
+          deletedFor: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+          updatedAt: existingDoc.data().updatedAt || firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+        setChatCategory('all');
+        openChatRoom(existingDoc.id);
+        return;
+      }
+      const ref = await db.collection('chats').add({
+        type: 'private',
+        members: [currentUser.uid, friendUid],
+        lastMessage: 'Started a conversation',
+        mutedBy: [],
+        typing: {},
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      setChatCategory('all');
+      openChatRoom(ref.id);
+    }
+
+    let newGroupPhotoBase64 = DEFAULT_GROUP_AVATAR;
+    function openNewGroupPage() {
+      newGroupPhotoBase64 = DEFAULT_GROUP_AVATAR;
+      document.getElementById('new-group-preview').src = newGroupPhotoBase64;
+      document.getElementById('new-group-name-input').value = '';
+      document.getElementById('new-group-search-input').value = '';
+      renderNewGroupCandidates('');
+      document.getElementById('new-group-page').classList.remove('hidden');
+      pushView('newGroup');
+    }
+
+    function renderNewGroupCandidates(query = '') {
+      const q = query.toLowerCase().trim();
+      const container = document.getElementById('group-friends-select-list');
+      const checkedIds = new Set(Array.from(document.querySelectorAll('.new-group-member-checkbox:checked')).map(cb => cb.value));
+
+      const candidates = allUsersCache.filter(u => {
+        if (!u || u.uid === currentUser.uid) return false;
+        if (!q) return true;
+        return (u.displayName || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q);
+      });
+
+      if (candidates.length === 0) {
+        container.innerHTML = `<div class="text-xs opacity-60 italic px-2">No matching people found.</div>`;
+        return;
+      }
+
+      container.innerHTML = candidates.map(u => {
+        const isFriend = cachedFriends.some(f => f.uid === u.uid);
+        const isChecked = checkedIds.has(u.uid) ? 'checked' : '';
+        return `
+          <label class="flex items-center justify-between p-2.5 rounded-2xl liquid-glass-sub cursor-pointer shadow-sm">
+            <div class="flex items-center space-x-3 truncate">
+              <input type="checkbox" value="${u.uid}" ${isChecked} class="new-group-member-checkbox w-4 h-4 rounded text-purple-600 shrink-0">
+              <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-9 h-9 rounded-full object-cover shadow-sm shrink-0">
+              <div class="truncate">
+                <span class="text-xs font-bold block truncate">${escapeHtml(u.displayName)}</span>
+                <span class="text-[10px] opacity-70 block truncate">@${escapeHtml(u.username)}</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${isFriend ? 'bg-purple-500/20 text-purple-700 dark:text-purple-200' : 'bg-black/10 opacity-75'}">${isFriend ? 'Friend' : 'Request'}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function handleNewGroupPhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      compressImageFile(file, 300, (base64) => {
+        newGroupPhotoBase64 = base64;
+        document.getElementById('new-group-preview').src = base64;
+      });
+    }
+
+    async function finalizeCreateGroup() {
+      const name = document.getElementById('new-group-name-input').value.trim();
+      const selectedMembers = Array.from(document.querySelectorAll('.new-group-member-checkbox:checked')).map(cb => cb.value);
+      if (!name) { showToast("Enter a group name.", "error"); return; }
+      if (selectedMembers.length === 0) { showToast("Select at least one person.", "error"); return; }
+
+      const allMembers = Array.from(new Set([...selectedMembers, currentUser.uid]));
+
+      await db.collection('chats').add({
+        type: 'group',
+        name,
+        photoURL: newGroupPhotoBase64,
+        members: allMembers,
+        acceptedBy: [currentUser.uid],
+        admins: [currentUser.uid],
+        anyoneCanAdd: false,
+        deletedGroup: false,
+        kicked: [],
+        mutedBy: [],
+        typing: {},
+        lastMessage: `${userData.displayName} created the group`,
+        createdBy: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showToast("Group created!");
+      setChatCategory('all');
+      navigateHomeChats();
+    }
+
+    let activeChatUnsub = null;
+    let chatDocRealtimeUnsub = null;
+
+    async function openChatRoom(chatId) {
+      activeChatId = chatId;
+      document.getElementById('chat-room-view').classList.remove('hidden');
+      pushView('chatRoom');
+
+      db.collection('chats').doc(chatId).update({
+        [`lastRead.${currentUser.uid}`]: Date.now()
+      }).catch(() => {});
+
+      if (chatDocRealtimeUnsub) chatDocRealtimeUnsub();
+      chatDocRealtimeUnsub = db.collection('chats').doc(chatId).onSnapshot(async chatDoc => {
+        if (!chatDoc.exists) { navigateBack(); return; }
+        activeChatData = chatDoc.data();
+
+        if (activeChatData.type === 'private') {
+          const otherUid = activeChatData.members.find(m => m !== currentUser.uid);
+          const u = await getCachedUser(otherUid);
+          if (u) {
+            activeOtherUser = u;
+            document.getElementById('chatroom-name').innerText = u.displayName;
+            document.getElementById('chatroom-avatar').src = u.photoURL || DEFAULT_AVATAR;
+            const isOnline = isUserReallyOnline(u);
+            document.getElementById('chatroom-status-dot').classList.toggle('hidden', !isOnline);
+            document.getElementById('chatroom-subtitle').innerText = isOnline ? 'Active now' : 'Offline';
+            document.getElementById('chatroom-header-actions').innerHTML = `
+              <button onclick="openActiveChatProfile()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm" title="Profile Info">
+                <i data-lucide="info" class="w-4 h-4"></i>
+              </button>
+            `;
+            lucide.createIcons();
+
+            const isFriend = cachedFriends.some(f => f.uid === otherUid);
+            const banner = document.getElementById('message-request-banner');
+            if (!isFriend) {
+              document.getElementById('message-request-text').innerText = `It seems like its your first time chatting with ${u.displayName}`;
+              banner.classList.remove('hidden');
+            } else {
+              banner.classList.add('hidden');
+            }
+            document.getElementById('group-invite-request-banner').classList.add('hidden');
+          }
+        } else {
+          activeOtherUser = null;
+          document.getElementById('chatroom-name').innerText = activeChatData.name;
+          document.getElementById('chatroom-avatar').src = activeChatData.photoURL || DEFAULT_GROUP_AVATAR;
+          document.getElementById('chatroom-status-dot').classList.add('hidden');
+          document.getElementById('chatroom-subtitle').innerText = `${activeChatData.members.length} members`;
+          document.getElementById('message-request-banner').classList.add('hidden');
+
+          const showGroupInviteBanner = isGroupPendingRequestForUser(activeChatData) && !activeChatData.deletedGroup;
+          document.getElementById('group-invite-request-banner').classList.toggle('hidden', !showGroupInviteBanner);
+
+          document.getElementById('chatroom-header-actions').innerHTML = `
+            <button onclick="openActiveChatProfile()" class="w-9 h-9 rounded-full liquid-glass-sub flex items-center justify-center shadow-sm" title="Group Info">
+              <i data-lucide="info" class="w-4 h-4"></i>
+            </button>
+          `;
+          lucide.createIcons();
+        }
+
+        refreshChatRoomAvailabilityState();
+        updateTypingIndicatorUI(activeChatData.typing || {});
+      });
+
+      if (activeChatUnsub) activeChatUnsub();
+      const cachedMsgs = loadOfflineMessagesSnapshot(chatId);
+      if (cachedMsgs.length > 0) {
+        renderMessages(cachedMsgs);
+      }
+      activeChatUnsub = db.collection('chats').doc(chatId).collection('messages')
+        .orderBy('createdAt', 'asc')
+        .onSnapshot(snapshot => {
+          saveOfflineMessagesSnapshot(chatId, snapshot.docs);
+          renderMessages(snapshot.docs);
+        }, () => {
+          const fallbackMsgs = loadOfflineMessagesSnapshot(chatId);
+          if (fallbackMsgs.length > 0) renderMessages(fallbackMsgs);
+        });
+    }
+
+    async function refreshChatRoomAvailabilityState() {
+      const composer = document.getElementById('chat-composer-active');
+      const unavailableBox = document.getElementById('chat-unavailable-box');
+      const unblockBtn = document.getElementById('chat-unblock-action-btn');
+      const deletedGroupBox = document.getElementById('chat-deleted-group-box');
+
+      if (!activeChatData || !currentUser) return;
+
+      if (activeChatData.type === 'group' && activeChatData.deletedGroup) {
+        composer.classList.add('hidden');
+        unavailableBox.classList.add('hidden');
+        deletedGroupBox.classList.remove('hidden');
+        return;
+      }
+      deletedGroupBox.classList.add('hidden');
+
+      if (activeChatData.type === 'private') {
+        const otherUid = activeChatData.members.find(m => m !== currentUser.uid);
+        const otherUserDoc = otherUid ? await getCachedUser(otherUid) : null;
+        const iBlockedThem = (userData?.blocked || []).includes(otherUid);
+        const theyBlockedMe = (otherUserDoc?.blocked || []).includes(currentUser.uid);
+
+        if (iBlockedThem || theyBlockedMe) {
+          composer.classList.add('hidden');
+          unavailableBox.classList.remove('hidden');
+          unblockBtn.classList.toggle('hidden', !iBlockedThem);
+          return;
+        }
+      }
+
+      unavailableBox.classList.add('hidden');
+      composer.classList.remove('hidden');
+    }
+
+    async function unblockActiveChatUser() {
+      if (!activeOtherUser || !currentUser) return;
+      const blocked = (userData?.blocked || []).filter(id => id !== activeOtherUser.uid);
+      await db.collection('users').doc(currentUser.uid).update({ blocked });
+      userData.blocked = blocked;
+      showToast(`Unblocked ${activeOtherUser.displayName}`);
+      refreshChatRoomAvailabilityState();
+    }
+
+    async function acceptGroupInviteRequest() {
+      if (!activeChatId || !currentUser) return;
+      await db.collection('chats').doc(activeChatId).update({
+        acceptedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+      });
+      document.getElementById('group-invite-request-banner').classList.add('hidden');
+      showToast("Group added to All chats!");
+    }
+
+    function performCloseChatRoom() {
+      if (activeChatId && currentUser) {
+        db.collection('chats').doc(activeChatId).update({
+          [`typing.${currentUser.uid}`]: firebase.firestore.FieldValue.delete()
+        }).catch(() => {});
+      }
+      document.getElementById('chat-room-view').classList.add('hidden');
+      if (activeChatUnsub) activeChatUnsub();
+      if (chatDocRealtimeUnsub) chatDocRealtimeUnsub();
+      activeChatId = null;
+      activeChatData = null;
+      activeOtherUser = null;
+      Object.keys(renderedMsgSignatures).forEach(k => delete renderedMsgSignatures[k]);
+      const msgCont = document.getElementById('chatroom-messages');
+      if (msgCont) msgCont.innerHTML = '';
+    }
+
+    function handleTypingInput() {
+      if (!activeChatId || !currentUser) return;
+      db.collection('chats').doc(activeChatId).update({
+        [`typing.${currentUser.uid}`]: Date.now()
+      }).catch(() => {});
+
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        if (!activeChatId || !currentUser) return;
+        db.collection('chats').doc(activeChatId).update({
+          [`typing.${currentUser.uid}`]: firebase.firestore.FieldValue.delete()
+        }).catch(() => {});
+      }, 2500);
+    }
+
+    async function updateTypingIndicatorUI(typingMap) {
+      const bar = document.getElementById('typing-indicator-bar');
+      const avatarPreview = document.getElementById('typing-avatar-preview');
+      const now = Date.now();
+      const activeTyperUids = Object.entries(typingMap)
+        .filter(([uid, ts]) => uid !== currentUser.uid && (now - ts) < 3500)
+        .map(([uid]) => uid);
+
+      if (activeTyperUids.length === 0) {
+        bar.classList.add('hidden');
+        return;
+      }
+
+      const typerUser = await getCachedUser(activeTyperUids[0]);
+      if (typerUser) avatarPreview.src = typerUser.photoURL || DEFAULT_AVATAR;
+      bar.classList.remove('hidden');
+    }
+
+    async function acceptMessageRequestAsFriend() {
+      if (!activeOtherUser) return;
+      await db.collection('friendships').add({
+        members: [currentUser.uid, activeOtherUser.uid],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('message-request-banner').classList.add('hidden');
+      showToast(`You and ${activeOtherUser.displayName} are now friends!`);
+    }
+
+    function dismissMessageRequestBanner() {
+      document.getElementById('message-request-banner').classList.add('hidden');
+    }
+
+    function openPhotoViewer(photoUrl) {
+      if (!photoUrl) return;
+      currentViewedPhotoUrl = photoUrl;
+      document.getElementById('photo-viewer-img').src = photoUrl;
+      document.getElementById('photo-viewer-page').classList.remove('hidden');
+      pushView('photoViewer');
+    }
+
+    function downloadViewedPhoto() {
+      if (!currentViewedPhotoUrl) return;
+      const link = document.createElement('a');
+      link.href = currentViewedPhotoUrl;
+      link.download = `bubbli-photo-${Date.now()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Downloading photo...");
+    }
+
+    const renderedMsgSignatures = {};
+
+    function buildReactionsHtml(msgId, reactions, isMe) {
+      if (!reactions || Object.keys(reactions).length === 0) return '';
+      const counts = {};
+      Object.values(reactions).forEach(emoji => { counts[emoji] = (counts[emoji] || 0) + 1; });
+      const badges = Object.entries(counts).map(([emoji, count]) =>
+        `<span class="inline-flex items-center space-x-0.5 liquid-glass px-1.5 py-0.5 rounded-full text-xs shadow-sm cursor-pointer reaction-badge-anim" onclick="event.stopPropagation(); openReactionDetails('${msgId}')">${emoji}${count > 1 ? `<span class="text-[10px] font-bold ml-0.5">${count}</span>` : ''}</span>`
+      ).join('');
+      return `<div data-reactions-box="true" class="absolute -bottom-3 ${isMe ? 'left-2' : 'right-2'} flex space-x-1">${badges}</div>`;
+    }
+
+    async function buildMessageElementHtml(docId, msg) {
+      const isMe = msg.senderId === currentUser.uid;
+
+      if (msg.isSystemMessage) {
+        return `<div id="msg-wrap-${docId}" class="text-center text-[11px] opacity-70 italic py-1 px-4 my-1 bg-black/5 dark:bg-white/5 rounded-full mx-auto w-fit msg-anim">${escapeHtml(msg.text)}</div>`;
+      }
+
+      if (msg.deletedForEveryone) {
+        return `<div id="msg-wrap-${docId}" class="text-center text-[11px] opacity-60 italic py-1 msg-anim">${escapeHtml(msg.senderName)} unsent a message</div>`;
+      }
+
+      let senderPhoto = DEFAULT_AVATAR;
+      if (!isMe && msg.senderId) {
+        const sUser = await getCachedUser(msg.senderId);
+        if (sUser && sUser.photoURL) senderPhoto = sUser.photoURL;
+      }
+
+      let content = '';
+      if (!isMe && activeChatData && activeChatData.type === 'group') {
+        content += `<div class="text-[10px] font-bold opacity-75 mb-0.5">${escapeHtml(msg.senderName)}</div>`;
+      }
+      if (msg.replyTo) {
+        content += `<div class="text-[10px] bg-black/10 px-2 py-1 rounded-lg mb-1 border-l-2 border-purple-400 truncate">Replying to: ${escapeHtml(msg.replyTo)}</div>`;
+      }
+      if (msg.imageURL) {
+        content += `<img src="${msg.imageURL}" onclick="event.stopPropagation(); openPhotoViewer(this.src);" class="rounded-2xl max-h-52 object-cover mt-1 shadow-sm cursor-pointer">`;
+      }
+      if (msg.videoURL) content += `<video controls playsinline preload="metadata" src="${msg.videoURL}" class="rounded-2xl max-h-52 object-cover mt-1 w-full shadow-sm"></video>`;
+      if (msg.audioURL) content += `<audio controls src="${msg.audioURL}" class="h-9 w-48 my-1"></audio>`;
+      if (msg.text && !msg.audioURL && !msg.videoURL && !msg.imageURL) {
+        content += `<p class="text-sm break-words leading-snug">${escapeHtml(msg.text)}</p>`;
+      }
+
+      const reactionsHtml = buildReactionsHtml(docId, msg.reactions, isMe);
+      const rawCopyText = msg.text || '';
+      const safePreview = encodeURIComponent(msg.text || 'Media Attachment');
+      const safeCopy = encodeURIComponent(rawCopyText);
+
+      if (isMe) {
+        return `
+          <div class="flex justify-end relative pb-3 msg-anim" id="msg-wrap-${docId}">
+            <div data-bubble="true"
+                 ontouchstart="startTouchTimer('${docId}', '${safePreview}', '${safeCopy}', true)"
+                 onmousedown="startTouchTimer('${docId}', '${safePreview}', '${safeCopy}', true)"
+                 oncontextmenu="event.preventDefault(); openLongPressModal('${docId}', '${safePreview}', '${safeCopy}', true);"
+                 class="max-w-[76%] glossy-button rounded-2xl rounded-br-sm px-3.5 py-2.5 shadow-md relative cursor-pointer">
+              ${content}
+              ${reactionsHtml}
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="flex items-end space-x-2 pb-3 msg-anim" id="msg-wrap-${docId}">
+            <img src="${senderPhoto}" class="w-7 h-7 rounded-full object-cover shadow-sm shrink-0 mb-1">
+            <div data-bubble="true"
+                 ontouchstart="startTouchTimer('${docId}', '${safePreview}', '${safeCopy}', false)"
+                 onmousedown="startTouchTimer('${docId}', '${safePreview}', '${safeCopy}', false)"
+                 oncontextmenu="event.preventDefault(); openLongPressModal('${docId}', '${safePreview}', '${safeCopy}', false);"
+                 class="max-w-[72%] liquid-glass rounded-2xl rounded-bl-sm px-3.5 py-2.5 shadow-md relative cursor-pointer">
+              ${content}
+              ${reactionsHtml}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    async function renderMessages(docs) {
+      const container = document.getElementById('chatroom-messages');
+      if (!container) return;
+
+      const activeIds = new Set();
+      let addedOrUpdatedAny = false;
+      const wasNearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 140;
+
+      for (const doc of docs) {
+        const msg = doc.data();
+        const docId = doc.id;
+        activeIds.add(docId);
+        const isMe = msg.senderId === currentUser.uid;
+        const reactionsKey = JSON.stringify(msg.reactions || {});
+        const baseSig = `${msg.isSystemMessage ? 1 : 0}|${msg.deletedForEveryone ? 1 : 0}|${msg.text || ''}|${msg.replyTo || ''}|${msg.imageURL ? 1 : 0}|${msg.videoURL ? 1 : 0}|${msg.audioURL ? 1 : 0}`;
+        const fullSig = `${baseSig}|${reactionsKey}`;
+
+        const existingEl = document.getElementById(`msg-wrap-${docId}`);
+        const prevSig = renderedMsgSignatures[docId];
+
+        if (existingEl && prevSig && prevSig !== fullSig) {
+          const prevBaseSig = prevSig.split('|').slice(0, 7).join('|');
+          if (prevBaseSig === baseSig) {
+            const bubble = existingEl.querySelector('[data-bubble="true"]');
+            if (bubble) {
+              const oldBox = bubble.querySelector('[data-reactions-box="true"]');
+              if (oldBox) oldBox.remove();
+              const newRxHtml = buildReactionsHtml(docId, msg.reactions, isMe);
+              if (newRxHtml) bubble.insertAdjacentHTML('beforeend', newRxHtml);
+            }
+            renderedMsgSignatures[docId] = fullSig;
+            addedOrUpdatedAny = true;
+            continue;
+          }
+        }
+
+        if (!existingEl || prevSig !== fullSig) {
+          const itemHtml = await buildMessageElementHtml(docId, msg);
+          if (existingEl) {
+            existingEl.outerHTML = itemHtml;
+          } else {
+            container.insertAdjacentHTML('beforeend', itemHtml);
+          }
+          renderedMsgSignatures[docId] = fullSig;
+          addedOrUpdatedAny = true;
+        }
+      }
+
+      Array.from(container.children).forEach(child => {
+        if (child.id && child.id.startsWith('msg-wrap-')) {
+          const idPart = child.id.replace('msg-wrap-', '');
+          if (!activeIds.has(idPart)) {
+            child.remove();
+            delete renderedMsgSignatures[idPart];
+          }
+        }
+      });
+
+      if (addedOrUpdatedAny) {
+        lucide.createIcons();
+        if (wasNearBottom || docs.length <= 2) {
+          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }
+      }
+    }
+
+    let touchTimer = null;
+    function startTouchTimer(msgId, encodedText, encodedCopy, isMe) {
+      clearTimeout(touchTimer);
+      touchTimer = setTimeout(() => openLongPressModal(msgId, encodedText, encodedCopy, isMe), 400);
+    }
+    window.addEventListener('touchend', () => clearTimeout(touchTimer));
+    window.addEventListener('mouseup', () => clearTimeout(touchTimer));
+
+    function openLongPressModal(msgId, encodedText, encodedCopy, isMe) {
+      selectedMessageForModal = msgId;
+      selectedMessageIsMine = isMe;
+      selectedMessageRawText = decodeURIComponent(encodedCopy || '');
+      document.getElementById('longpress-preview-bubble').innerText = decodeURIComponent(encodedText);
+      document.getElementById('unsend-everyone-btn').classList.toggle('hidden', !isMe);
+      document.getElementById('longpress-backdrop').classList.remove('hidden');
+      pushView('longpress');
+    }
+
+    async function copyMessageTextFromModal() {
+      const textToCopy = selectedMessageRawText || document.getElementById('longpress-preview-bubble').innerText || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(textToCopy);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = textToCopy;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        showToast("Copied text!");
+      } catch (e) {
+        showToast("Unable to copy text", "error");
+      }
+      navigateBack();
+    }
+
+    async function reactToMessage(emoji) {
+      if (!selectedMessageForModal || !activeChatId) return;
+      const targetId = selectedMessageForModal;
+      const wrap = document.getElementById(`msg-wrap-${targetId}`);
+      if (wrap) {
+        const bubble = wrap.querySelector('[data-bubble="true"]');
+        const isMe = Boolean(selectedMessageIsMine);
+        if (bubble) {
+          let box = bubble.querySelector('[data-reactions-box="true"]');
+          if (!box) {
+            bubble.insertAdjacentHTML('beforeend', `<div data-reactions-box="true" class="absolute -bottom-3 ${isMe ? 'left-2' : 'right-2'} flex space-x-1"></div>`);
+            box = bubble.querySelector('[data-reactions-box="true"]');
+          }
+          box.innerHTML = `<span class="inline-flex items-center space-x-0.5 liquid-glass px-1.5 py-0.5 rounded-full text-xs shadow-sm cursor-pointer reaction-badge-anim" onclick="event.stopPropagation(); openReactionDetails('${targetId}')">${emoji}</span>`;
+        }
+      }
+      navigateBack();
+      if (navigator.onLine === false) {
+        showToast("Your connection is unstable", "error");
+        return;
+      }
+      db.collection('chats').doc(activeChatId).collection('messages').doc(targetId).update({
+        [`reactions.${currentUser.uid}`]: emoji
+      }).catch(() => {
+        showToast("Your connection is unstable", "error");
+      });
+    }
+
+    async function openReactionDetails(msgId) {
+      const doc = await db.collection('chats').doc(activeChatId).collection('messages').doc(msgId).get();
+      if (!doc.exists) return;
+      const reactions = doc.data().reactions || {};
+      const container = document.getElementById('reaction-details-list');
+      let html = '';
+      for (const [uid, emoji] of Object.entries(reactions)) {
+        const u = await getCachedUser(uid);
+        if (!u) continue;
+        html += `
+          <div class="liquid-glass-sub p-2.5 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-2.5">
+              <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-7 h-7 rounded-full object-cover">
+              <span class="text-xs font-bold">${escapeHtml(u.displayName)}</span>
+            </div>
+            <span class="text-base">${emoji}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      document.getElementById('reaction-details-backdrop').classList.remove('hidden');
+      pushView('reactionDetails');
+    }
+
+    function triggerReplyFromModal() {
+      replyingToMessage = document.getElementById('longpress-preview-bubble').innerText;
+      document.getElementById('reply-preview-text').innerText = replyingToMessage;
+      document.getElementById('reply-banner').classList.remove('hidden');
+      navigateBack();
+    }
+
+    function cancelReply() {
+      replyingToMessage = null;
+      document.getElementById('reply-banner').classList.add('hidden');
+    }
+
+    function unsendForMe() {
+      const wrap = document.getElementById(`msg-wrap-${selectedMessageForModal}`);
+      if (wrap) wrap.remove();
+      navigateBack();
+      showToast("Hidden from your view");
+    }
+
+    async function unsendForEveryone() {
+      if (!selectedMessageForModal || !activeChatId || !selectedMessageIsMine) return;
+      await db.collection('chats').doc(activeChatId).collection('messages').doc(selectedMessageForModal).update({
+        deletedForEveryone: true,
+        text: null,
+        imageURL: null,
+        audioURL: null,
+        videoURL: null
+      });
+      navigateBack();
+      showToast("Message unsent");
+    }
+
+    async function checkOnlineConnectionForSend() {
+      if (navigator.onLine === false) {
+        showToast("Your connection is unstable", "error");
+        return false;
+      }
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3500);
+        await fetch('https://bubbli-af4ff.firebaseapp.com/?_ping=' + Date.now(), {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        return true;
+      } catch (e) {
+        showToast("Your connection is unstable", "error");
+        return false;
+      }
+    }
+
+    async function sendChatMessage(payload = {}) {
+      if (!activeChatId || !activeChatData) return;
+
+      if (activeChatData.type === 'group' && activeChatData.deletedGroup) {
+        showToast("This group chat has been deleted", "error");
+        return;
+      }
+
+      if (activeChatData.type === 'private') {
+        const otherUid = activeChatData.members.find(m => m !== currentUser.uid);
+        const otherUserDoc = otherUid ? await getCachedUser(otherUid) : null;
+        if ((userData?.blocked || []).includes(otherUid) || (otherUserDoc?.blocked || []).includes(currentUser.uid)) {
+          showToast("This person is unavailable", "error");
+          return;
+        }
+      }
+
+      const input = document.getElementById('chat-message-input');
+      const text = payload.text !== undefined ? payload.text : input.value.trim();
+      if (!text && !payload.imageURL && !payload.videoURL && !payload.audioURL) return;
+
+      const isOnlineNow = await checkOnlineConnectionForSend();
+      if (!isOnlineNow) {
+        return;
+      }
+
+      if (!payload.imageURL && !payload.videoURL && !payload.audioURL) input.value = '';
+      const replyCopy = replyingToMessage;
+      cancelReply();
+
+      try {
+        await db.collection('chats').doc(activeChatId).collection('messages').add({
+          senderId: currentUser.uid,
+          senderName: userData.displayName,
+          text,
+          replyTo: replyCopy,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          ...payload
+        });
+
+        await db.collection('chats').doc(activeChatId).update({
+          lastMessage: text || 'Sent an attachment',
+          lastSenderId: currentUser.uid,
+          deletedFor: [],
+          [`typing.${currentUser.uid}`]: firebase.firestore.FieldValue.delete(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        showToast("Your connection is unstable", "error");
+      }
+    }
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingTimerInterval = null;
+    let waveAnimInterval = null;
+
+    async function startVoiceRecordingSession() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onload = ev => {
+            sendChatMessage({ audioURL: ev.target.result, text: 'Voice clip' });
+            showToast("Voice clip sent!");
+          };
+          reader.readAsDataURL(blob);
+          stream.getTracks().forEach(t => t.stop());
+        };
+
+        mediaRecorder.start();
+        document.getElementById('chat-composer-active').classList.add('hidden');
+        document.getElementById('voice-recording-bar').classList.remove('hidden');
+
+        let seconds = 0;
+        const timerEl = document.getElementById('recording-timer');
+        recordingTimerInterval = setInterval(() => {
+          seconds++;
+          const m = Math.floor(seconds / 60);
+          const s = seconds % 60;
+          timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }, 1000);
+
+        const waveEl = document.getElementById('wave-visualizer');
+        const glyphs = ['|', '||', '|||', '||||', '¦', '‖', 'll'];
+        waveAnimInterval = setInterval(() => {
+          let str = '';
+          for (let i = 0; i < 7; i++) str += glyphs[Math.floor(Math.random() * glyphs.length)] + ' ';
+          waveEl.innerText = str;
+        }, 140);
+      } catch (err) {
+        showToast("Microphone access denied or blocked by WebView container.", "error");
+      }
+    }
+
+    function cancelVoiceRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      cleanupRecordingUI();
+      showToast("Canceled");
+    }
+
+    function stopAndSendVoiceRecording() {
+      if (mediaRecorder) mediaRecorder.stop();
+      cleanupRecordingUI();
+    }
+
+    function cleanupRecordingUI() {
+      clearInterval(recordingTimerInterval);
+      clearInterval(waveAnimInterval);
+      document.getElementById('voice-recording-bar').classList.add('hidden');
+      document.getElementById('chat-composer-active').classList.remove('hidden');
+    }
+
+    function openMediaMenu() {
+      document.getElementById('media-menu-backdrop').classList.remove('hidden');
+      pushView('mediaMenu');
+    }
+
+    function selectMediaOption(type) {
+      navigateBack();
+      if (type === 'photo') document.getElementById('chat-image-file-input').click();
+      else if (type === 'video') document.getElementById('chat-video-file-input').click();
+      else if (type === 'voice') startVoiceRecordingSession();
+    }
+
+    async function handleChatImageSelect(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      const selectedFiles = files.slice(0, 10);
+      if (files.length > 10) {
+        showToast("Sending first 10 selected photos...", "error");
+      } else if (selectedFiles.length > 1) {
+        showToast(`Sending ${selectedFiles.length} photos...`);
+      }
+
+      for (const file of selectedFiles) {
+        await new Promise((resolve) => {
+          compressImageFile(file, 800, async (base64) => {
+            await sendChatMessage({ imageURL: base64, text: 'Photo' });
+            resolve();
+          });
+        });
+      }
+      e.target.value = '';
+    }
+
+    function handleChatVideoSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        sendChatMessage({ videoURL: ev.target.result, text: 'Video' });
+        showToast("Video sent!");
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    async function openActiveChatProfile() {
+      if (!activeChatData) return;
+      if (activeChatData.type === 'private' && activeOtherUser) {
+        openPublicProfile(activeOtherUser.uid);
+      } else if (activeChatData.type === 'group') {
+        document.getElementById('profile-page-title').innerText = "Group Info";
+        document.getElementById('fp-avatar').src = activeChatData.photoURL || DEFAULT_GROUP_AVATAR;
+        document.getElementById('fp-displayname').innerText = activeChatData.name;
+        document.getElementById('fp-username').innerText = `${activeChatData.members.length} members`;
+
+        const isUserAdmin = (activeChatData.admins || []).includes(currentUser.uid);
+        const canAddMembers = isUserAdmin || Boolean(activeChatData.anyoneCanAdd);
+
+        document.getElementById('fp-group-manage-btn-container').classList.toggle('hidden', !isUserAdmin && !canAddMembers);
+        document.getElementById('fp-edit-group-btn').classList.toggle('hidden', !isUserAdmin);
+        document.getElementById('fp-add-members-btn').classList.toggle('hidden', !canAddMembers);
+        document.getElementById('fp-anyone-can-add-wrap').classList.toggle('hidden', !isUserAdmin);
+
+        const toggleBtn = document.getElementById('fp-anyone-can-add-toggle');
+        const enabled = Boolean(activeChatData.anyoneCanAdd);
+        toggleBtn.innerText = enabled ? 'ON' : 'OFF';
+        toggleBtn.className = enabled ? 'px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white' : 'px-3 py-1 rounded-full text-[11px] font-bold liquid-glass-sub';
+
+        document.getElementById('fp-leave-group-container').classList.remove('hidden');
+        document.getElementById('fp-delete-group-btn').classList.toggle('hidden', !isUserAdmin);
+        document.getElementById('fp-group-members-container').classList.remove('hidden');
+
+        const adminsContainer = document.getElementById('fp-group-admins-list');
+        const membersContainer = document.getElementById('fp-group-members-list');
+        const admins = activeChatData.admins || [activeChatData.createdBy];
+        const members = activeChatData.members || [];
+
+        let adminHtml = '';
+        let memberHtml = '';
+
+        for (const mUid of members) {
+          const m = await getCachedUser(mUid);
+          if (!m) continue;
+          const isAdmin = admins.includes(mUid);
+          const itemHtml = `
+            <div onclick="${isUserAdmin && mUid !== currentUser.uid ? `openMemberActionModal('${mUid}', '${escapeHtml(m.displayName)}')` : ''}" 
+                 class="liquid-glass-sub p-3 rounded-2xl flex items-center justify-between ${isUserAdmin && mUid !== currentUser.uid ? 'cursor-pointer hover:bg-purple-500/10' : ''} shadow-sm">
+              <div class="flex items-center space-x-3">
+                <img src="${m.photoURL || DEFAULT_AVATAR}" class="w-10 h-10 rounded-full object-cover shadow-sm">
+                <div>
+                  <h4 class="text-xs font-bold">${escapeHtml(m.displayName)} ${mUid === currentUser.uid ? '(You)' : ''}</h4>
+                  <p class="text-[10px] opacity-70">@${escapeHtml(m.username)}</p>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-1 rounded-lg ${isAdmin ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300' : 'opacity-60'}">${isAdmin ? 'Admin' : 'Member'}</span>
+            </div>
+          `;
+          if (isAdmin) adminHtml += itemHtml;
+          else memberHtml += itemHtml;
+        }
+
+        adminsContainer.innerHTML = adminHtml;
+        membersContainer.innerHTML = memberHtml || `<div class="text-xs opacity-60 italic px-2">No regular members.</div>`;
+        document.getElementById('friend-profile-overlay').classList.remove('hidden');
+        pushView('friendProfile');
+      }
+    }
+
+    async function toggleAnyoneCanAddSetting() {
+      if (!activeChatId || !activeChatData) return;
+      const isUserAdmin = (activeChatData.admins || []).includes(currentUser.uid);
+      if (!isUserAdmin) { showToast("Only admins can change this setting.", "error"); return; }
+      const nextVal = !Boolean(activeChatData.anyoneCanAdd);
+      await db.collection('chats').doc(activeChatId).update({ anyoneCanAdd: nextVal });
+      activeChatData.anyoneCanAdd = nextVal;
+      showToast(nextVal ? "Anyone in the group can add members" : "Only admins can add members");
+      openActiveChatProfile();
+    }
+
+    function openMemberActionModal(memberUid, memberName) {
+      selectedMemberIdForAction = memberUid;
+      selectedMemberNameForAction = memberName;
+      document.getElementById('member-action-title').innerText = memberName;
+      const admins = activeChatData.admins || [];
+      const isAlreadyAdmin = admins.includes(memberUid);
+      document.getElementById('member-action-admin-btn').querySelector('span').innerText = isAlreadyAdmin ? 'Dismiss Admin' : 'Make Admin';
+      document.getElementById('member-action-backdrop').classList.remove('hidden');
+      pushView('memberAction');
+    }
+
+    async function executeMemberAction(actionType) {
+      if (!selectedMemberIdForAction || !activeChatId) return;
+      const ref = db.collection('chats').doc(activeChatId);
+      const admins = activeChatData.admins || [activeChatData.createdBy];
+
+      if (actionType === 'makeAdmin') {
+        if (!admins.includes(selectedMemberIdForAction)) {
+          admins.push(selectedMemberIdForAction);
+          await ref.update({ admins });
+          await ref.collection('messages').add({
+            isSystemMessage: true,
+            text: `${userData.displayName} ranked ${selectedMemberNameForAction} Admin!`,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          showToast(`${selectedMemberNameForAction} ranked Admin!`);
+        } else {
+          const updatedAdmins = admins.filter(id => id !== selectedMemberIdForAction);
+          await ref.update({ admins: updatedAdmins });
+          showToast(`${selectedMemberNameForAction} dismissed as admin.`);
+        }
+      }
+
+      navigateBack();
+      navigateBack();
+      openActiveChatProfile();
+    }
+
+    function confirmKickMember() {
+      showConfirmationModal("Kick Member", `Are you sure you want to kick ${selectedMemberNameForAction} from the group?`, async () => {
+        if (!selectedMemberIdForAction || !activeChatId) return;
+        const ref = db.collection('chats').doc(activeChatId);
+        const admins = activeChatData.admins || [activeChatData.createdBy];
+        const members = activeChatData.members || [];
+
+        const updatedMembers = members.filter(id => id !== selectedMemberIdForAction);
+        const updatedAdmins = admins.filter(id => id !== selectedMemberIdForAction);
+        const kickedList = activeChatData.kicked || [];
+        kickedList.push(selectedMemberIdForAction);
+
+        await ref.update({ members: updatedMembers, admins: updatedAdmins, kicked: kickedList });
+        await ref.collection('messages').add({
+          isSystemMessage: true,
+          text: `${userData.displayName} has kicked ${selectedMemberNameForAction} from the group!`,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast(`Kicked ${selectedMemberNameForAction}`);
+        navigateBack();
+        navigateBack();
+        navigateBack();
+        openActiveChatProfile();
+      });
+    }
+
+    function openAddMembersPage() {
+      document.getElementById('add-members-search-input').value = '';
+      renderAddMembersCandidates('');
+      document.getElementById('add-members-page').classList.remove('hidden');
+      pushView('addMembers');
+    }
+
+    function renderAddMembersCandidates(query = '') {
+      const q = query.toLowerCase().trim();
+      const currentMembers = activeChatData?.members || [];
+      const checkedIds = new Set(Array.from(document.querySelectorAll('.add-member-checkbox:checked')).map(cb => cb.value));
+      const container = document.getElementById('add-members-select-list');
+
+      const candidates = allUsersCache.filter(u => {
+        if (!u || u.uid === currentUser.uid || currentMembers.includes(u.uid)) return false;
+        if (!q) return true;
+        return (u.displayName || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q);
+      });
+
+      if (candidates.length === 0) {
+        container.innerHTML = `<div class="text-xs opacity-60 italic px-2">No matching users to add.</div>`;
+        return;
+      }
+
+      container.innerHTML = candidates.map(u => {
+        const isFriend = cachedFriends.some(f => f.uid === u.uid);
+        const isChecked = checkedIds.has(u.uid) ? 'checked' : '';
+        return `
+          <label class="flex items-center justify-between p-2.5 rounded-2xl liquid-glass-sub cursor-pointer shadow-sm">
+            <div class="flex items-center space-x-3 truncate">
+              <input type="checkbox" value="${u.uid}" ${isChecked} class="add-member-checkbox w-4 h-4 rounded text-purple-600 shrink-0">
+              <img src="${u.photoURL || DEFAULT_AVATAR}" class="w-9 h-9 rounded-full object-cover shadow-sm shrink-0">
+              <div class="truncate">
+                <span class="text-xs font-bold block truncate">${escapeHtml(u.displayName)}</span>
+                <span class="text-[10px] opacity-70 block truncate">@${escapeHtml(u.username)}</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${isFriend ? 'bg-purple-500/20 text-purple-700 dark:text-purple-200' : 'bg-black/10 opacity-75'}">${isFriend ? 'Friend' : 'Request'}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    async function finalizeAddMembers() {
+      const selected = Array.from(document.querySelectorAll('.add-member-checkbox:checked')).map(cb => cb.value);
+      if (selected.length === 0) { showToast("Select people to add.", "error"); return; }
+      const updatedMembers = Array.from(new Set([...(activeChatData.members || []), ...selected]));
+      const kickedList = (activeChatData.kicked || []).filter(id => !selected.includes(id));
+
+      await db.collection('chats').doc(activeChatId).update({
+        members: updatedMembers,
+        kicked: kickedList,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      for (const mUid of selected) {
+        const mUser = await getCachedUser(mUid);
+        if (mUser) {
+          await db.collection('chats').doc(activeChatId).collection('messages').add({
+            isSystemMessage: true,
+            text: `${userData.displayName} added ${mUser.displayName} to the group`,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+
+      showToast("Members added!");
+      navigateBack();
+      navigateBack();
+      openActiveChatProfile();
+    }
+
+    function confirmDeleteGroupChat() {
+      if (!activeChatId || !activeChatData) return;
+      const isUserAdmin = (activeChatData.admins || []).includes(currentUser.uid);
+      if (!isUserAdmin) { showToast("Only admins can delete this group chat.", "error"); return; }
+
+      showConfirmationModal("Delete Group Chat", "This will mark the group chat as deleted for everyone in the conversation.", async () => {
+        const chatRef = db.collection('chats').doc(activeChatId);
+        await chatRef.update({
+          deletedGroup: true,
+          lastMessage: "This group chat has been deleted",
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Group chat marked as deleted.");
+        navigateBack();
+      });
+    }
+
+    function confirmLeaveGroup() {
+      showConfirmationModal("Leave Group", "Are you sure you want to leave this group chat?", async () => {
+        if (!activeChatId || !activeChatData) return;
+        const chatRef = db.collection('chats').doc(activeChatId);
+        const members = (activeChatData.members || []).filter(id => id !== currentUser.uid);
+        const admins = (activeChatData.admins || []).filter(id => id !== currentUser.uid);
+        if (admins.length === 0 && members.length > 0) admins.push(members[0]);
+
+        await chatRef.update({ members, admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        if (!activeChatData.deletedGroup) {
+          await chatRef.collection('messages').add({
+            isSystemMessage: true,
+            text: `${userData.displayName} has left the group`,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        showToast("You left the group.");
+        navigateHomeChats();
+      });
+    }
+
+    let editGroupPhotoBase64 = "";
+    function openGroupProfileEdit() {
+      document.getElementById('edit-group-name-input').value = activeChatData.name;
+      editGroupPhotoBase64 = activeChatData.photoURL || DEFAULT_GROUP_AVATAR;
+      document.getElementById('edit-group-avatar-preview').src = editGroupPhotoBase64;
+      document.getElementById('group-profile-edit-overlay').classList.remove('hidden');
+      pushView('editGroup');
+    }
+
+    function handleEditGroupPhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      compressImageFile(file, 300, (base64) => {
+        editGroupPhotoBase64 = base64;
+        document.getElementById('edit-group-avatar-preview').src = base64;
+      });
+    }
+
+    async function saveGroupProfileChanges() {
+      const name = document.getElementById('edit-group-name-input').value.trim();
+      if (!name || !activeChatId) return;
+      await db.collection('chats').doc(activeChatId).update({ name, photoURL: editGroupPhotoBase64 });
+      showToast("Group updated!");
+      navigateBack();
+      document.getElementById('fp-displayname').innerText = name;
+      document.getElementById('fp-avatar').src = editGroupPhotoBase64;
+    }
+
+    function openConfigureProfilePage() {
+      loadUserData(currentUser.uid);
+      document.getElementById('configure-profile-page').classList.remove('hidden');
+      pushView('configureProfile');
+    }
+
+    function openBackgroundEditorPage() {
+      document.getElementById('background-editor-page').classList.remove('hidden');
+      pushView('backgroundEditor');
+    }
+
+    function handleProfileGalleryUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      compressImageFile(file, 300, async (base64) => {
+        document.getElementById('settings-avatar').src = base64;
+        document.getElementById('header-avatar').src = base64;
+        await db.collection('users').doc(currentUser.uid).update({ photoURL: base64 });
+        showToast("Profile photo updated!");
+      });
+      e.target.value = '';
+    }
+
+    async function saveProfileConfiguration() {
+      const displayName = document.getElementById('settings-displayname-input').value.trim();
+      const username = document.getElementById('settings-username-input').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const bio = document.getElementById('settings-bio-input').value.trim();
+      if (!displayName || !username) { showToast("Display name & username required.", "error"); return; }
+      await db.collection('users').doc(currentUser.uid).update({ displayName, username, bio });
+      await loadUserData(currentUser.uid);
+      showToast("Profile saved!");
+      navigateBack();
+    }
+
+    function switchSection(sectionName) {
+      ['chats', 'friends', 'requests', 'settings'].forEach(sec => {
+        document.getElementById(`section-${sec}`).classList.toggle('hidden', sec !== sectionName);
+        const btn = document.getElementById(`nav-btn-${sec}`);
+        if (sec === sectionName) { btn.classList.remove('opacity-60'); btn.classList.add('font-bold'); }
+        else { btn.classList.add('opacity-60'); btn.classList.remove('font-bold'); }
+      });
+    }
+
+    function compressImageFile(file, maxDim, callback) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    }
+  </script>
+</body>
+</html>
